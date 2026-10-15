@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "Air Hockey Audio",
+    "slug": "air-hockey-audio",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#000000",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lcooper1215.airhockeyaudio",
+      "infoPlist": { "UIBackgroundModes": [] }
+    }
+  }
+}

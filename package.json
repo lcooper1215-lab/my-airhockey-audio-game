@@ -1,0 +1,19 @@
+{
+  "name": "air-hockey-audio",
+  "version": "0.1.0",
+  "main": "node_modules/expo/AppEntry.js",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo start --ios"
+  },
+  "dependencies": {
+    "expo": "*",
+    "expo-haptics": "*",
+    "expo-keep-awake": "*",
+    "expo-speech": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-webview": "*"
+  }
+}
