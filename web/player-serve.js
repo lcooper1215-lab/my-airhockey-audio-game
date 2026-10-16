@@ -1,6 +1,6 @@
   let serveTouch=null;
   function serve(){
-    puck={x:me,y:.10,vx:0,vy:0};state='countdown';serveTouch=null;
+    puck={x:me,y:.10,vx:0,vy:0};ai=.5;aiTarget=.5;aiThinkIn=.22;state='countdown';serveTouch=null;
     document.getElementById('serve-controls').hidden=true;
     document.getElementById('pad').textContent='3… 2… 1…';
     say('Three.',true);serveSound(0);
@@ -9,7 +9,7 @@
     later(()=>{
       if(ctx&&ctx.state!=='running')ctx.resume();puck.x=me;puck.y=.10;puck.vx=puck.vy=0;state='ready';
       document.getElementById('serve-controls').hidden=false;
-      document.getElementById('pad').textContent='Place the puck, then flick upward to strike.';
+      document.getElementById('pad').textContent='Place the puck, then flick up or swipe sideways to strike.';
       const dropped=say('Puck is dropped.',true);if(dropped)dropped.onend=()=>{if(state==='ready'&&!paused&&ctx)ctx.resume();};
     },3000);
   }
@@ -25,7 +25,7 @@
   function handleServingTouch(e){
     if(state!=='ready'||paused)return;e.preventDefault();const touch=e.touches?.[0]||e.changedTouches?.[0];if(!touch)return;
     if(e.type==='touchstart'){serveTouch={x:touch.clientX,y:touch.clientY};placePuck(paddleFromTouch(touch.clientX));}
-    else if(serveTouch){me=paddleFromTouch(touch.clientX);syncPaddle();if(serveTouch.y-touch.clientY>=28)strikePuck((touch.clientX-serveTouch.x)/Math.max(1,window.innerWidth)*2);if(e.type==='touchend')serveTouch=null;}
+    else if(serveTouch){const dx=touch.clientX-serveTouch.x,up=serveTouch.y-touch.clientY;if(up>=28||Math.abs(dx)>=36){me=puck.x;strikePuck(dx/Math.max(1,window.innerWidth)*2);me=paddleFromTouch(touch.clientX);syncPaddle();}else{me=paddleFromTouch(touch.clientX);syncPaddle();}if(e.type==='touchend')serveTouch=null;}
   }
   document.addEventListener('touchend',e=>{if(state==='ready'&&!e.target.closest('#gamebar'))handleServingTouch(e);},{passive:false});
   document.addEventListener('click',e=>{if(e.target.closest('#place-puck'))placePuck();if(e.target.closest('#strike-puck'))strikePuck();});

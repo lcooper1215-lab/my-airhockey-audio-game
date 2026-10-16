@@ -71,3 +71,11 @@ The one-time paddle upgrade raises saved paddle/wall volumes to at least the new
 A separate short rising chirp triggers as an incoming puck crosses the human goal's front edge at normalized y=0.05, the paddle line. It is evaluated before collision resolution so a successful return at that line also produces the cue. The crossing x is calculated for that exact point, reflecting a side-wall bounce when needed; the active cue's stereo pan then follows puck.x during its brief decay. It never follows the player's paddle. It stays silent earlier in the approach, for outgoing pucks and during placement/countdown. A crossing latch avoids duplicates at the line.
 
 `goal-border.js` contains the crossing detector and short tracked voice. Sound settings adds Puck at your goal border with a test, volume and chirp/bell choice; it is separate from paddle-near-side-wall warnings. `node verify-goal-border.mjs` checks the crossing threshold, outgoing/serve silence, duplicate suppression, changing left/right pan and side-wall reflection. Real iPhone listening still needs user verification.
+
+## Return reliability and a beatable computer
+
+The computer now updates its target every 220 ms, moves at 0.20 table widths/second instead of 0.55, and has its own 0.09 paddle half-width. The human contact half-width increases from 0.11 to 0.16; the displayed mallet widths match these collision bounds. `game-step.js` owns the final gameplay step. An aligned incoming puck returns automatically; a miss still scores normally. There is no forced win or scripted miss.
+
+Manual serves now accept upward, diagonal or sideways strokes. Contact is judged from the puck placement before the stroke rather than rejecting a diagonal serve after the finger has moved away. The paddle hum defaults to 35 with softer resting and movement envelopes; stereo position and pitch tracking remain.
+
+`node verify-playability.mjs` runs the actual collision rules over opening-shot positions/angles and checks both human goals and computer saves, as well as aligned human returns and genuine misses. The compiled startup regression also tests diagonal and sideways serves. This confirms simulated behavior, not real iPhone gesture delivery.
