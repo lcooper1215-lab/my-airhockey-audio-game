@@ -41,3 +41,9 @@ The talking interface now initializes on every page opening without an enable bu
 The short ready message now has a four-second fallback instead of waiting up to twenty seconds for browser speech callbacks. Starting the serve resumes an interrupted audio context. Clicking puck transients have a slightly longer, louder envelope for audibility. No start/enable/resume voice button appears on opening; automatic internal routing remains active. Optional recovery to internal navigation is available inside voice/control settings after choosing standard browser controls.
 
 Run `node verify-game-start.mjs` for the compiled-app regression: simulate missing speech callbacks and interrupted audio, advance frames, verify a moving puck plus generated serve, puck, metallic wall and hit voices. This is simulated verification; real iPhone audio output still needs user testing.
+
+## Real-table audio update
+
+Recorded table impacts now come from krb21's CC0 `air hockey smack.WAV` Freesound preview. See `assets/SOUND-CREDITS.md` for the source, license and edits. Three compact 22.05 kHz PCM excerpts are embedded synchronously into the built page via `assets/table-hits.json`, so playback needs no external request or asynchronous decoder. `realistic-audio.js` supplies recorded-impact playback, a looped filtered-air bed and a low fan motor. The rail texture layers a bright recorded impact with a brief inharmonic metallic clink. Existing directional puck clicks remain the tracking cue.
+
+Table airflow has its own preset, test, stop and volume controls. It is quiet by default and can be muted separately. Default wood/drum/metal selections migrate to the recorded/recorded-low/rail kit once; other custom selections are preserved. A procedural fallback remains if recorded buffers cannot initialize. `node verify-realistic.mjs` verifies sample bounds, initialization, playback, looping, muting and preview cleanup. Real iPhone listening still needs user verification.

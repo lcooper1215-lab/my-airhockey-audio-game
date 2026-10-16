@@ -1,18 +1,20 @@
-  const SOUND_DEFAULTS={master:65,puck:70,paddle:35,walls:40,hits:50,ai:45,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'sine',wallTone:'metal',hitTone:'wood',aiTone:'drum',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
+  const SOUND_DEFAULTS={air:18,airTone:'fan',master:65,puck:70,paddle:35,walls:40,hits:50,ai:45,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'sine',wallTone:'rail',hitTone:'recorded',aiTone:'recordedlow',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
   const SOUND_CHOICES=__SOUND_CHOICES__;
-  let sound={...SOUND_DEFAULTS};
+  let sound={...SOUND_DEFAULTS};let realismUpgraded=false;
   try{const saved=JSON.parse(localStorage.getItem('air-hockey-sound-v2')||'{}');for(const key of Object.keys(SOUND_DEFAULTS)){const v=saved[key];if(typeof SOUND_DEFAULTS[key]==='number'&&Number.isFinite(v))sound[key]=Math.max(key==='edgeRange'?5:0,Math.min(key==='edgeRange'?30:100,v));else if(typeof v==='string')sound[key]=v;}}catch{}
+  try{if(!localStorage.getItem('air-hockey-realism-v1')){if(sound.wallTone==='metal')sound.wallTone='rail';if(sound.hitTone==='wood')sound.hitTone='recorded';if(sound.aiTone==='drum')sound.aiTone='recordedlow';realismUpgraded=true;}}catch{}
   for(const [k,choices] of Object.entries(SOUND_CHOICES))if(!choices.includes(sound[k]))sound[k]=SOUND_DEFAULTS[k];
   let ctx,master,compressor,puckOsc,puckGain,puckPan,padOsc,padGain,padPan,edgeNext=0,puckNext=0,previewing=false;
   let previewNodes=new Set();
   const volume=k=>sound[k]/100;
+  if(realismUpgraded){try{localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));localStorage.setItem('air-hockey-realism-v1','1');}catch{}}
   const wave=t=>['triangle','hollow'].includes(t)?'triangle':'sine';
   const status=text=>{const e=document.getElementById('sound-status');if(e)e.textContent=text;};
   function initAudio(){
     ctx=new (window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=volume('master')*.65;
     compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-12;compressor.knee.value=12;compressor.ratio.value=4;compressor.attack.value=.005;compressor.release.value=.18;master.connect(compressor).connect(ctx.destination);
     puckOsc=ctx.createOscillator();puckGain=ctx.createGain();puckGain.gain.value=0;puckPan=ctx.createStereoPanner();puckOsc.connect(puckGain).connect(puckPan).connect(master);puckOsc.start();
-    padOsc=ctx.createOscillator();padGain=ctx.createGain();padGain.gain.value=0;padPan=ctx.createStereoPanner();padOsc.connect(padGain).connect(padPan).connect(master);padOsc.start();
+    padOsc=ctx.createOscillator();padGain=ctx.createGain();padGain.gain.value=0;padPan=ctx.createStereoPanner();padOsc.connect(padGain).connect(padPan).connect(master);padOsc.start();initTableAudio();
   }
   // All transient voices have short fade-ins and smooth decays. Inharmonic
   // partials make metal recognizably different from the wooden and drum cues.
@@ -25,7 +27,9 @@
   function blip(freq,dur,x,type,amp){tone(freq,dur,x,type,amp??.22,'serve');}
   function texture(style,x,channel,delay=0,amp=.28){
     const note=(f,d,a=1,type='sine',offset=0,bend=1)=>tone(f,d,x,type,amp*a,channel,delay+offset,bend);
-    if(style==='metal'){[730,1217,1913,2861].forEach((f,i)=>note(f,.26-i*.035,1/(i+2)));}
+    if(style==='recorded'||style==='recordedlow'){if(!recordedHit(style==='recorded'?0:2,x,channel,delay,style==='recordedlow'?.82:1,.5)){note(style==='recorded'?400:280,.08,.9,'triangle');note(1300,.03,.2);}}
+    else if(style==='rail'){recordedHit(1,x,channel,delay,1.08,.42);[1370,2243,3187].forEach((f,i)=>note(f,.18-i*.035,.42/(i+1),'sine'));}
+    else if(style==='metal'){[730,1217,1913,2861].forEach((f,i)=>note(f,.26-i*.035,1/(i+2)));}
     else if(style==='rattle'){for(let i=0;i<3;i++){note(1340+i*89,.075,.45,'triangle',i*.045);note(2137,.07,.16,'sine',i*.045);}}
     else if(style==='glass'){note(2200,.25,.55);note(3311,.17,.16);}
     else if(style==='bell'){note(1800,.16,.65);note(2870,.12,.2);}
@@ -52,6 +56,7 @@
   function updateAudio(){
     if(!ctx)return;const t=ctx.currentTime,active=state==='playing',tracking=active||state==='serving'||state==='wait';const duck=('speechSynthesis' in window&&speechSynthesis.speaking)?.35:1;
     master.gain.setTargetAtTime(volume('master')*.65*duck,t,.035);
+    updateAir(tracking);
     const near=clamp(1-puck.y,0,1),continuous=['sine','triangle','warble'].includes(sound.puckTone);
     puckOsc.type=wave(sound.puckTone);puckOsc.frequency.setTargetAtTime((sound.distance==='volume'?660:480+near*400)+(sound.puckTone==='warble'?Math.sin(t*9)*28:0),t,.018);puckPan.pan.setTargetAtTime(clamp(puck.x*2-1,-1,1),t,.01);
     puckGain.gain.setTargetAtTime(active&&continuous?volume('puck')*(sound.distance==='pitch'?.17:.10+near*.12):0,t,.015);
@@ -75,7 +80,7 @@
     const kind=btn.dataset.preview,pos=document.getElementById('preview-'+kind),x=pos?Number(pos.value):.5,near=Number(document.getElementById('preview-distance').value);
     if(kind==='puck'){if(['click','tock','shaker'].includes(sound.puckTone)){for(let t=0;t<1;t+=.18-near*.085)puckTick(x,near,t);}else tone(sound.distance==='volume'?660:480+near*400,1,x,sound.puckTone,sound.distance==='pitch'?.17:.10+near*.12,'puck');}
     if(kind==='paddle'){if(sound.paddleMode==='pulse'){for(let i=0;i<4;i++)tone(sound.paddleTone==='soft'?190:sound.paddleTone==='hollow'?110:145,.18,x,sound.paddleTone,.16,'paddle',i*.25);}else tone(sound.paddleTone==='soft'?190:sound.paddleTone==='hollow'?110:145,1,x,sound.paddleTone,.16,'paddle');}
-    if(kind==='walls')wallSound(x);if(kind==='hits')hitSound(x);if(kind==='ai')aiHitSound(x);if(kind==='edges')for(let i=0;i<3;i++)texture(sound.edgeTone,x,'edges',i*.3,.17);
+    if(kind==='air')previewAir();if(kind==='walls')wallSound(x);if(kind==='hits')hitSound(x);if(kind==='ai')aiHitSound(x);if(kind==='edges')for(let i=0;i<3;i++)texture(sound.edgeTone,x,'edges',i*.3,.17);
     if(kind==='goals'||kind==='loss')goalSound(kind==='goals');if(kind==='serve')for(let i=0;i<3;i++)serveSound(i,i*.5,x);
     if(kind==='speech')say('You two, computer one. This is your spoken score.',true);previewing=false;status('Testing '+(kind==='loss'?'computer goal':kind)+'.');
   });
