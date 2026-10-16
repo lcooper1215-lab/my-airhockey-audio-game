@@ -1,4 +1,4 @@
-  const SOUND_DEFAULTS={goalWarning:55,goalWarningTone:'rise',stereo:'focused',direction:'pattern',air:8,airTone:'fan',master:65,puck:85,paddle:35,walls:65,hits:50,ai:45,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'guide',wallTone:'rail',hitTone:'recorded',aiTone:'knockpair',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
+  const SOUND_DEFAULTS={goalWarning:55,goalWarningTone:'rise',stereo:'focused',direction:'pattern',air:12,airTone:'fan',master:65,puck:85,paddle:35,walls:65,hits:50,ai:45,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'glide',wallTone:'rail',hitTone:'recorded',aiTone:'knockpair',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
   const SOUND_CHOICES=__SOUND_CHOICES__;
   let sound={...SOUND_DEFAULTS};let realismUpgraded=false;
   try{const saved=JSON.parse(localStorage.getItem('air-hockey-sound-v2')||'{}');for(const key of Object.keys(SOUND_DEFAULTS)){const v=saved[key];if(typeof SOUND_DEFAULTS[key]==='number'&&Number.isFinite(v))sound[key]=Math.max(key==='edgeRange'?5:0,Math.min(key==='edgeRange'?30:100,v));else if(typeof v==='string')sound[key]=v;}}catch{}
@@ -6,6 +6,7 @@
   try{if(!localStorage.getItem('air-hockey-position-v1')){if(sound.aiTone==='recordedlow'||sound.aiTone==='drum')sound.aiTone='knockpair';if(sound.air===18)sound.air=8;if(sound.paddle===35)sound.paddle=22;if(sound.puck===70)sound.puck=85;if(sound.walls===40)sound.walls=55;localStorage.setItem('air-hockey-position-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   try{if(!localStorage.getItem('air-hockey-paddle-v1')){sound.paddle=Math.max(55,sound.paddle);sound.walls=Math.max(65,sound.walls);if(sound.paddleTone==='sine')sound.paddleTone='guide';localStorage.setItem('air-hockey-paddle-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   try{if(!localStorage.getItem('air-hockey-playability-v1')){if(sound.paddle===55)sound.paddle=35;localStorage.setItem('air-hockey-playability-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
+  try{if(!localStorage.getItem('air-hockey-glide-v1')){if(sound.air===8)sound.air=12;if(sound.paddleTone==='guide')sound.paddleTone='glide';localStorage.setItem('air-hockey-glide-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   for(const [k,choices] of Object.entries(SOUND_CHOICES))if(!choices.includes(sound[k]))sound[k]=SOUND_DEFAULTS[k];
   let ctx,master,compressor,puckOsc,puckGain,puckPan,padOsc,padGain,padPan,edgeNext=0,puckNext=0,previewing=false;
   let previewNodes=new Set();let paddleMotionUntil=0,lastPaddlePosition=.5;
@@ -53,12 +54,12 @@
     if(sound.puckTone==='shaker')for(let i=0;i<3;i++)tone(pitch*1.8+i*211,.018,x,'triangle',amp*.22,'puck',delay+i*.008);
     if(sound.direction==='pattern'&&toward)tone(pitch*.98,.018,x,'triangle',amp*.6,'puck',delay+.048);
   }
-  function hitSound(x){texture(sound.hitTone,x,'hits');}
-  function aiHitSound(x){texture(sound.aiTone,x,'ai',0,.24);}
-  function wallSound(x){texture(sound.wallTone,x<.5?0:1,'walls',0,.36);}
+  function hitSound(x){if(typeof showPlayEvent==='function')showPlayEvent('YOUR HIT');texture(sound.hitTone,x,'hits');}
+  function aiHitSound(x){if(typeof showPlayEvent==='function')showPlayEvent('COMPUTER HIT');texture(sound.aiTone,x,'ai',0,.24);}
+  function wallSound(x){if(typeof showPlayEvent==='function')showPlayEvent(x<.5?'LEFT WALL':'RIGHT WALL');texture(sound.wallTone,x<.5?0:1,'walls',0,.36);}
   function edgeSound(x){texture(sound.edgeTone,x,'edges',0,.17);}
-  function paddleFrequency(x){return sound.paddleTone==='guide'?190+clamp(x,0,1)*120:sound.paddleTone==='soft'?190:sound.paddleTone==='hollow'?110:145;}
-  function previewPaddleSweep(){const o=ctx.createOscillator(),g=ctx.createGain(),p=ctx.createStereoPanner(),t=ctx.currentTime;o.type=wave(sound.paddleTone);o.frequency.setValueAtTime(paddleFrequency(0),t);o.frequency.linearRampToValueAtTime(paddleFrequency(1),t+1.5);p.pan.setValueAtTime(-1,t);p.pan.linearRampToValueAtTime(1,t+1.5);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(Math.max(.0001,volume('paddle')*.20),t+.04);g.gain.setValueAtTime(Math.max(.0001,volume('paddle')*.20),t+1.45);g.gain.linearRampToValueAtTime(.0001,t+1.55);o.connect(g).connect(p).connect(master);previewNodes.add(o);o.start(t);o.stop(t+1.57);o.onended=()=>{previewNodes.delete(o);o.disconnect();g.disconnect();p.disconnect();};}
+  function paddleFrequency(x){if(sound.paddleTone==='glide')return 210+clamp(x,0,1)*70;return sound.paddleTone==='guide'?190+clamp(x,0,1)*120:sound.paddleTone==='soft'?190:sound.paddleTone==='hollow'?110:145;}
+  function previewPaddleSweep(){if(sound.paddleTone==='glide'){previewPaddleGlide(.5,true);return;}const o=ctx.createOscillator(),g=ctx.createGain(),p=ctx.createStereoPanner(),t=ctx.currentTime;o.type=wave(sound.paddleTone);o.frequency.setValueAtTime(paddleFrequency(0),t);o.frequency.linearRampToValueAtTime(paddleFrequency(1),t+1.5);p.pan.setValueAtTime(-1,t);p.pan.linearRampToValueAtTime(1,t+1.5);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(Math.max(.0001,volume('paddle')*.20),t+.04);g.gain.setValueAtTime(Math.max(.0001,volume('paddle')*.20),t+1.45);g.gain.linearRampToValueAtTime(.0001,t+1.55);o.connect(g).connect(p).connect(master);previewNodes.add(o);o.start(t);o.stop(t+1.57);o.onended=()=>{previewNodes.delete(o);o.disconnect();g.disconnect();p.disconnect();};}
   function goalSound(mine){const notes=mine?[523,659,784,1047]:[784,659,523,392];const style=sound.goalTone;notes.forEach((f,i)=>{tone(style==='bells'?f*2:f,.21,.5,style==='arcade'?'triangle':'sine',.20,'goals',i*.14);if(style==='harp')tone(f*2,.12,.5,'triangle',.045,'goals',i*.14);});}
   function serveSound(index,delay=0,x=.5){const f=index===2?990:660;if(sound.serveTone==='beeps')tone(f,.14,x,'sine',.22,'serve',delay);else texture(sound.serveTone==='bell'?'bell':'pluck',x,'serve',delay,.21);}
   function updateAudio(){
@@ -71,7 +72,7 @@
     if(active&&!continuous&&t>=puckNext){puckTick(puck.x,near);puckNext=t+(sound.direction==='pattern'?.21-near*.07:.18-near*.085);}
     padOsc.type=wave(sound.paddleTone);padOsc.frequency.setTargetAtTime(paddleFrequency(me),t,.02);padPan.pan.setTargetAtTime(spatialPan(me),t,.01);
     if(Math.abs(me-lastPaddlePosition)>.002)paddleMotionUntil=t+.25;lastPaddlePosition=me;
-    const moving=t<paddleMotionUntil;const pulse=sound.paddleMode==='pulse'?.55+.45*Math.sin(t*Math.PI*4):1;padGain.gain.setTargetAtTime(tracking?volume('paddle')*(moving?.20:.10)*pulse:0,t,.025);
+    const moving=t<paddleMotionUntil;updatePaddleGlide(tracking&&moving&&sound.paddleTone==='glide',me);const pulse=sound.paddleMode==='pulse'?.55+.45*Math.sin(t*Math.PI*4):1;padGain.gain.setTargetAtTime(tracking?volume('paddle')*(sound.paddleTone==='glide'?.035:moving?.20:.10)*pulse:0,t,.025);
     const range=sound.edgeRange/100,edge=Math.min(me,1-me);if(active&&sound.edges>0&&edge<range&&t>=edgeNext){edgeSound(me<.5?0:1);edgeNext=t+.7-.48*(1-edge/range);}
   }
   function stopPreview(){for(const o of previewNodes){try{o.stop();}catch{}}previewNodes.clear();if('speechSynthesis' in window&&state==='idle')speechSynthesis.cancel();}
@@ -88,7 +89,7 @@
     if(!ctx)initAudio();ctx.resume();master.gain.setTargetAtTime(volume('master')*.65,ctx.currentTime,.02);previewing=true;
     const kind=btn.dataset.preview,pos=document.getElementById('preview-'+kind),x=pos?Number(pos.value):.5,near=Number(document.getElementById('preview-distance').value);
     if(kind==='puck'){if(['click','tock','shaker'].includes(sound.puckTone)){for(let t=0;t<1;t+=(sound.direction==='pattern'?.21-near*.07:.18-near*.085))puckTick(x,near,t,document.getElementById('preview-travel')?.value!=='away');}else tone(sound.distance==='volume'?660:480+near*400,1,x,sound.puckTone,sound.distance==='pitch'?.17:.10+near*.12,'puck');}
-    if(kind==='paddle'){if(sound.paddleMode==='pulse'){for(let i=0;i<4;i++)tone(paddleFrequency(x),.18,x,sound.paddleTone,.20,'paddle',i*.25);}else tone(paddleFrequency(x),1,x,sound.paddleTone,.20,'paddle');}
+    if(kind==='paddle'&&sound.paddleTone==='glide')previewPaddleGlide(x,false);if(kind==='paddle'&&sound.paddleTone!=='glide'){if(sound.paddleMode==='pulse'){for(let i=0;i<4;i++)tone(paddleFrequency(x),.18,x,sound.paddleTone,.20,'paddle',i*.25);}else tone(paddleFrequency(x),1,x,sound.paddleTone,.20,'paddle');}
     if(kind==='goalWarning')goalBorderSound(x,false);if(kind==='paddle-sweep')previewPaddleSweep();if(kind==='channel-left'||kind==='channel-right')tone(700,.6,kind==='channel-left'?0:1,'sine',.26,'stereoCheck');if(kind==='wall-left'||kind==='wall-right')wallSound(kind==='wall-left'?0:1);if(kind==='air')previewAir();if(kind==='walls')wallSound(x);if(kind==='hits')hitSound(x);if(kind==='ai')aiHitSound(x);if(kind==='edges')for(let i=0;i<3;i++)texture(sound.edgeTone,x,'edges',i*.3,.17);
     if(kind==='goals'||kind==='loss')goalSound(kind==='goals');if(kind==='serve')for(let i=0;i<3;i++)serveSound(i,i*.5,x);
     if(kind==='speech')say('You two, computer one. This is your spoken score.',true);previewing=false;status('Testing '+(kind==='loss'?'computer goal':kind)+'.');

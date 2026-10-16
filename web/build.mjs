@@ -1,3 +1,4 @@
+import { visualPanel, lowVisionStyle } from './visual-settings.mjs';
 import { headphoneCheck, tableView, tableStyle } from './portrait-table.mjs';
 import { voicePanel, paddleControls } from './voice-controls.mjs';
 import { readFile } from 'node:fs/promises';
@@ -164,7 +165,19 @@ html=html.replaceAll('then flick upward to strike', 'then flick upward or swipe 
 html=html.replace('then flick upward. Each rally', 'then flick upward or swipe sideways. Each rally');
 html=html.replace('<h3>Example rally</h3>','<h3>Returning and scoring</h3><p>After serving, slide your paddle left and right to match the puck sound. You do not need to flick again during a rally: a return happens automatically when the incoming puck reaches your paddle. Your hit is one sharp strike; the computer hit is two low knocks. Serve near a side or angle your swipe to send the puck away from the computer. The computer has a reaction delay and can miss.</p><h3>Example rally</h3>');
 html=html.replace('</style>','.mallet.player{width:32%}.mallet.computer{width:18%}</style>');
+html=html.replace('<section id="voice-screen"', visualPanel+'<section id="voice-screen"');
+html=html.replace('<button data-view="voice">','<button data-view="display">Visual display</button><button data-view="voice">');
+html=html.replace('<div class="center-line"></div>','<div class="center-line"></div><div class="center-ring"></div><div id="visual-callout"></div>'+[0,1,2,3].map(i=>'<div id="trail-'+i+'" class="trail-dot" hidden></div>').join(''));
+html=html.replace('</style>',lowVisionStyle+'</style>');
+const visualAt=html.lastIndexOf('  requestAnimationFrame(loop);');
+html=html.slice(0,visualAt)+await readFile('visual-settings.js','utf8')+'\n'+html.slice(visualAt);
+html=html.replace('renderPortraitTable();','renderPortraitTable();renderLowVision();');
+html=html.replace('if (mine) score.me++; else score.ai++;', "if (mine) score.me++; else score.ai++;showPlayEvent(mine?'YOUR GOAL':'COMPUTER GOAL');");
+html=html.replace("document.getElementById('pad').textContent='3… 2… 1…';","document.getElementById('pad').textContent='3';");
+html=html.replace("later(()=>{say('Two.',true);","later(()=>{document.getElementById('pad').textContent='2';say('Two.',true);");
+html=html.replace("later(()=>{say('One.',true);","later(()=>{document.getElementById('pad').textContent='1';say('One.',true);");
+html=html.replace('The GitHub gameplay screen is text on a black background; it does not include a drawn rink or moving puck.', 'The game includes a high-contrast moving table, puck, paddles, goal labels and large score. Visual display settings offer dark or light contrast, puck size and trail controls.');
 await writeFile('dist/index.html',html);
 await writeFile('dist/manifest.webmanifest',JSON.stringify({id:'/',name:'Air Hockey Audio',short_name:'Air Hockey',start_url:'/',scope:'/',display:'standalone',orientation:'portrait-primary',background_color:'#07111f',theme_color:'#07111f',icons:[{src:'./icon-192.png',sizes:'192x192',type:'image/png'},{src:'./icon-512.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}]},null,2));
-await writeFile('dist/sw.js',`const CACHE='air-hockey-v14'; const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==location.origin)return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).then(r=>{if(r.ok&&!r.redirected){const copy=r.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));}return r;}).catch(()=>caches.match('./index.html')));}else if(ASSETS.some(p=>new URL(p,location.href).href===e.request.url)){e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request)));}});`);
+await writeFile('dist/sw.js',`const CACHE='air-hockey-v15'; const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==location.origin)return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).then(r=>{if(r.ok&&!r.redirected){const copy=r.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));}return r;}).catch(()=>caches.match('./index.html')));}else if(ASSETS.some(p=>new URL(p,location.href).href===e.request.url)){e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request)));}});`);
 console.log('Built iPhone web app.');
