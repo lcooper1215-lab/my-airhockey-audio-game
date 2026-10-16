@@ -1,22 +1,23 @@
-import fs from 'node:fs';
-import vm from 'node:vm';
-import assert from 'node:assert/strict';
-const params=()=>({value:0,setTargetAtTime(v){this.value=v},setValueAtTime(v){this.value=v},linearRampToValueAtTime(v){this.value=v},exponentialRampToValueAtTime(v){this.value=v}});
-const oscillators=[];
-const node=()=>({gain:params(),pan:params(),frequency:params(),threshold:params(),knee:params(),ratio:params(),attack:params(),release:params(),connect(){return this},disconnect(){},start(){},stop(){}});
-class Audio {currentTime=0;state='running';destination={};createGain=node;createDynamicsCompressor=node;createStereoPanner=node;createOscillator(){const n=node();oscillators.push(n);return n}resume(){this.state='running'}suspend(){this.state='suspended'}}
-const c={window:{AudioContext:Audio},document:{querySelectorAll:()=>[],addEventListener(){}},localStorage:{getItem:()=>null},Math,Object,Number,JSON,state:'playing',me:.5,puck:{x:0,y:1},clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),later:f=>f()};
-vm.createContext(c);vm.runInContext(fs.readFileSync('sound-system.js','utf8')+'\nthis.api={initAudio,updateAudio,hitSound,wallSound,goalSound,sound,get:()=>({ctx,puckOsc,puckGain,puckPan,padGain,padPan,master})};',c);
-const a=c.api;a.initAudio();a.updateAudio();let n=a.get();assert.equal(n.puckPan.pan.value,-1);assert.equal(n.puckOsc.frequency.value,480);const far=n.puckGain.gain.value;
-c.puck={x:1,y:0};a.updateAudio();assert.equal(n.puckPan.pan.value,1);assert.equal(n.puckOsc.frequency.value,880);assert.ok(n.puckGain.gain.value>far);
-a.sound.distance='pitch';a.updateAudio();const fixed=n.puckGain.gain.value;c.puck.y=1;a.updateAudio();assert.equal(n.puckGain.gain.value,fixed);
-a.sound.distance='volume';a.updateAudio();assert.equal(n.puckOsc.frequency.value,660);c.puck.y=0;a.updateAudio();assert.equal(n.puckOsc.frequency.value,660);
-a.sound.puck=0;a.updateAudio();assert.equal(n.puckGain.gain.value,0);a.sound.paddle=0;a.updateAudio();assert.equal(n.padGain.gain.value,0);
-c.me=0;n.ctx.currentTime=5;const count=oscillators.length;a.updateAudio();assert.equal(n.padPan.pan.value,-1);assert.equal(oscillators.length,count+1);assert.equal(oscillators.at(-1).frequency.value,1250);
-c.me=1;n.ctx.currentTime=6;a.updateAudio();assert.equal(n.padPan.pan.value,1);assert.equal(oscillators.at(-1).frequency.value,1550);
-c.me=.5;n.ctx.currentTime=7;const mid=oscillators.length;a.updateAudio();assert.equal(oscillators.length,mid);
-c.state='idle';a.updateAudio();assert.equal(n.puckGain.gain.value,0);assert.equal(n.padGain.gain.value,0);
-a.sound.master=0;a.updateAudio();assert.equal(n.master.gain.value,0);
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import {LIBRARY} from './sound-panel.mjs';
+const params=()=>({value:0,setTargetAtTime(v){this.value=v},setValueAtTime(v){this.value=v},linearRampToValueAtTime(v){this.value=v},exponentialRampToValueAtTime(v){if(v<=0)throw Error('Invalid ramp');this.value=v}});
+const oscillators=[],handlers={};const node=()=>({gain:params(),pan:params(),frequency:params(),threshold:params(),knee:params(),ratio:params(),attack:params(),release:params(),connect(){return this},disconnect(){},start(){},stop(){this.stopped=true}});
+class Audio{currentTime=0;destination={};createGain=node;createDynamicsCompressor=node;createStereoPanner=node;createOscillator(){const n=node();oscillators.push(n);return n}resume(){}suspend(){}}
+const choices={...Object.fromEntries(Object.entries(LIBRARY).map(([k,v])=>[k,v.map(x=>x[0])])),distance:['both','pitch','volume'],paddleMode:['steady','pulse']};
+const c={window:{AudioContext:Audio},document:{querySelectorAll:()=>[],getElementById:()=>null,addEventListener:(k,f)=>handlers[k]=f},localStorage:{getItem:()=>null,setItem(){}},Math,Object,Number,JSON,state:'playing',me:.5,puck:{x:0,y:1},clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),later:f=>f()};
+vm.createContext(c);vm.runInContext(fs.readFileSync('sound-system.js','utf8').replace('__SOUND_CHOICES__',JSON.stringify(choices))+'\nthis.api={initAudio,updateAudio,texture,puckTick,hitSound,wallSound,aiHitSound,edgeSound,goalSound,serveSound,stopPreview,sound,defaults:SOUND_DEFAULTS,get:()=>({ctx,puckOsc,puckGain,puckPan,padGain,padPan,master})};',c);
+const a=c.api;a.initAudio();a.updateAudio();let n=a.get();assert.equal(a.sound.puckTone,'click');assert.equal(a.sound.wallTone,'metal');assert.equal(n.puckGain.gain.value,0);assert.equal(n.puckPan.pan.value,-1);assert.ok(oscillators.length>2,'Default puck makes ticks');
+a.sound.puckTone='sine';a.updateAudio();assert.equal(n.puckOsc.frequency.value,480);const far=n.puckGain.gain.value;c.puck={x:1,y:0};a.updateAudio();assert.equal(n.puckPan.pan.value,1);assert.equal(n.puckOsc.frequency.value,880);assert.ok(n.puckGain.gain.value>far);
+a.sound.distance='pitch';a.updateAudio();const fixed=n.puckGain.gain.value;c.puck.y=1;a.updateAudio();assert.equal(n.puckGain.gain.value,fixed);a.sound.distance='volume';a.updateAudio();assert.equal(n.puckOsc.frequency.value,660);
+a.sound.puckTone='click';a.sound.puck=0;n.ctx.currentTime=3;const muted=oscillators.length;a.updateAudio();assert.equal(oscillators.length,muted);a.sound.paddle=0;a.updateAudio();assert.equal(n.padGain.gain.value,0);
+c.me=0;n.ctx.currentTime=5;let count=oscillators.length;a.updateAudio();assert.equal(n.padPan.pan.value,-1);assert.ok(oscillators.length>count);assert.equal(oscillators.at(-1).frequency.value,2645);
+c.me=1;n.ctx.currentTime=6;a.updateAudio();assert.equal(n.padPan.pan.value,1);assert.ok(Math.abs(oscillators.at(-1).frequency.value-3105)<.001);
+c.me=.5;n.ctx.currentTime=7;count=oscillators.length;a.updateAudio();assert.equal(oscillators.length,count);
+// Every selectable impact texture must synthesize at least one voice.
+for(const [key,fn] of [['wallTone','wallSound'],['hitTone','hitSound'],['aiTone','aiHitSound'],['edgeTone','edgeSound']])for(const [v]of LIBRARY[key]){a.sound[key]=v;count=oscillators.length;a[fn](0);assert.ok(oscillators.length>count,key+':'+v);}
+for(const [v]of LIBRARY.goalTone){a.sound.goalTone=v;count=oscillators.length;a.goalSound(true);a.goalSound(false);assert.ok(oscillators.length>count);}
+for(const [v]of LIBRARY.serveTone){a.sound.serveTone=v;count=oscillators.length;a.serveSound(2);assert.ok(oscillators.length>count);}
+c.state='idle';a.updateAudio();assert.equal(n.puckGain.gain.value,0);assert.equal(n.padGain.gain.value,0);a.sound.master=0;a.updateAudio();assert.equal(n.master.gain.value,0);
 const html=fs.readFileSync('dist/index.html','utf8');for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);new vm.Script(fs.readFileSync('dist/sw.js','utf8'));
-for(const key of ['master','puck','paddle','walls','hits','goals','speech'])assert.ok(html.includes('data-sound="'+key+'"'));
-console.log('PASS: stereo positions, approach modes, layer muting, master muting, edge-only warnings, idle silence, settings controls and script syntax.');
+for(const key of ['master','puck','paddle','walls','hits','ai','edges','serve','goals','speech'])assert.ok(html.includes('data-sound="'+key+'"'));
+assert.ok(html.includes('serveSound(0);later(()=>serveSound(1),500);'));assert.ok(html.includes('later(()=>serveSound(2),1000)'));
+console.log('PASS: default click and metal cues, panning, approach modes, muting, edge-only chirps, every selectable impact/serve/goal voice, idle silence and script syntax.');

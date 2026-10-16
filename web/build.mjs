@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { soundPanel } from './sound-panel.mjs';
+import { soundPanel, LIBRARY } from './sound-panel.mjs';
 import { gameHtml } from './upstream/gameHtml.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
 await mkdir('dist', {recursive:true});
@@ -44,7 +44,7 @@ html=html.replace("document.addEventListener('mousemove', e => { me", "document.
 html=html.replace('</body>', `<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script></body>`);
 const audioStart=html.indexOf('  // ---------- Audio ----------');
 const audioEnd=html.indexOf('  // ---------- Game logic ----------',audioStart);
-html=html.slice(0,audioStart)+await readFile('sound-system.js','utf8')+'\n'+html.slice(audioEnd);
+html=html.slice(0,audioStart)+(await readFile('sound-system.js','utf8')).replace('__SOUND_CHOICES__',JSON.stringify({...Object.fromEntries(Object.entries(LIBRARY).map(([k,v])=>[k,v.map(x=>x[0])])),distance:['both','pitch','volume'],paddleMode:['steady','pulse']}))+'\n'+html.slice(audioEnd);
 html=html.replace('<section class="panel" aria-labelledby="how">',soundPanel+'<section class="panel" aria-labelledby="how">');
 html=html.replace('u.rate=1.05;',"u.rate=1.05; u.volume=volume('speech')*volume('master');");
 html=html.replace("document.getElementById('start').onclick=start;document.getElementById('start').focus();", "document.getElementById('start').onclick=start;syncSoundControls();document.getElementById('start').focus();");
@@ -55,7 +55,21 @@ html=html.replace('Computer’s hit: a lower click.', 'Computer’s hit: a short
 html=html.replace('Side wall: a short low knock on the side the puck hit.', 'Side wall: a brief high tap on the side the puck hit. Soft repeating pulses warn when your paddle is near a side wall.');
 html=html.replace('A bright double click means you returned it.', 'A mellow knock means you returned it.');
 html=html.replace('The puck tones, collision sounds, scoring rules and touch-position controls come from the GitHub game.', 'Scoring rules and touch-position controls come from the GitHub game. The new sound system uses separate pitch bands, softer notes, individual volume controls and paddle edge warnings.');
+html=html.replace('<h1>Air Hockey Audio</h1>', '<h1 id="main-title" tabindex="-1">Air Hockey Audio</h1>');
+html=html.replace('<main><div class="eyebrow">','<main><section id="home-screen" class="app-screen"><div class="eyebrow">');
+html=html.replace('<p id="status" role="status" class="muted">Ready to play.</p>','<p id="status" role="status" class="muted">Ready to play.</p><nav aria-label="Main menu"><button data-view="sound">Sound settings</button><button data-view="how">How to play</button><button data-view="install">Install on iPhone</button></nav><p>New defaults: clicking puck, metallic wall clanks and a low paddle hum. Customize each sound in Sound settings.</p></section>');
+html=html.replace('<section class="panel" aria-labelledby="how"><h2 id="how">','<section id="how-screen" class="panel app-screen" hidden aria-labelledby="how"><button data-view="home">Back to main menu</button><h2 id="how" tabindex="-1">');
+html=html.replace('<section class="panel"><h2>Install on iPhone</h2>','<section id="install-screen" class="panel app-screen" hidden><button data-view="home">Back to main menu</button><h2 tabindex="-1">Install on iPhone</h2>');
+html=html.replace('function start(){','function start(){\n    stopPreview();');
+html=html.replace("blip(660,0.1,0.5,'sine',0.4); later(()=>blip(660,0.1,0.5,'sine',0.4),500);", 'serveSound(0);later(()=>serveSound(1),500);');
+html=html.replace("later(()=>blip(990,0.2,0.5,'sine',0.5),1000);",'later(()=>serveSound(2),1000);');
+html=html.replace('Puck: a midrange tone panned left or right.', 'Puck: rhythmic clicks by default, panned left or right. Clicks become more frequent as the puck approaches. Continuous tones are available in Sound settings.');
+html=html.replace('Your hit: a mellow knock by default. Choose a light chime or soft note in Sound studio.', 'Your hit: a wooden block knock by default. Choose other textures in Sound settings.');
+html=html.replace('Computer’s hit: a shorter, slightly higher note.', 'Computer’s hit: a low drum by default, distinct from your wooden hit.');
+html=html.replace('Side wall: a brief high tap on the side the puck hit. Soft repeating pulses warn when your paddle is near a side wall.', 'Side wall: a metallic clank on the side the puck hit. High repeating chirps separately warn when your paddle is near a side wall.');
+html=html.replaceAll('Sound studio','Sound settings');
+html=html.replace('</style>', '.app-screen[hidden]{display:none!important}.sound-group{border-top:1px solid #41536b;margin:12px 0}.sound-group summary{padding:18px 8px;cursor:pointer;font-size:20px;min-height:28px}.sound-group-body{padding:0 8px 16px}nav button{display:block;width:100%;text-align:left}button{touch-action:manipulation}.sound-group button{min-height:48px}h1:focus,h2:focus{outline:2px solid #6fe3cf;outline-offset:5px}</style>');
 await writeFile('dist/index.html',html);
 await writeFile('dist/manifest.webmanifest',JSON.stringify({id:'/',name:'Air Hockey Audio',short_name:'Air Hockey',start_url:'/',scope:'/',display:'standalone',background_color:'#07111f',theme_color:'#07111f',icons:[{src:'./icon-192.png',sizes:'192x192',type:'image/png'},{src:'./icon-512.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}]},null,2));
-await writeFile('dist/sw.js',`const CACHE='air-hockey-v3'; const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==location.origin)return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).then(r=>{if(r.ok&&!r.redirected){const copy=r.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));}return r;}).catch(()=>caches.match('./index.html')));}else if(ASSETS.some(p=>new URL(p,location.href).href===e.request.url)){e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request)));}});`);
+await writeFile('dist/sw.js',`const CACHE='air-hockey-v4'; const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==location.origin)return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).then(r=>{if(r.ok&&!r.redirected){const copy=r.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));}return r;}).catch(()=>caches.match('./index.html')));}else if(ASSETS.some(p=>new URL(p,location.href).href===e.request.url)){e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request)));}});`);
 console.log('Built iPhone web app.');
