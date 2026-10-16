@@ -35,3 +35,9 @@ During gameplay, one finger controls the paddle directly. A two-finger tap pause
 ## Automatic internal screen reader
 
 The talking interface now initializes on every page opening without an enable button. The first swipe or tap announces Start game using the saved narrator, naturally satisfying Safari's user-interaction requirement. It cannot guarantee speech before any interaction or disable the system screen reader. The initial gesture does not skip Start game; subsequent swipes navigate normally. Exit affects only the current session; opening the app again starts internal routing automatically. Trusted native control activations remain available; compatibility clicks following intercepted touch gestures are suppressed to avoid activating the wrong item.
+
+## Gameplay startup audio repair
+
+The short ready message now has a four-second fallback instead of waiting up to twenty seconds for browser speech callbacks. Starting the serve resumes an interrupted audio context. Clicking puck transients have a slightly longer, louder envelope for audibility. No start/enable/resume voice button appears on opening; automatic internal routing remains active. Optional recovery to internal navigation is available inside voice/control settings after choosing standard browser controls.
+
+Run `node verify-game-start.mjs` for the compiled-app regression: simulate missing speech callbacks and interrupted audio, advance frames, verify a moving puck plus generated serve, puck, metallic wall and hit voices. This is simulated verification; real iPhone audio output still needs user testing.

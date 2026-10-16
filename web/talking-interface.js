@@ -61,7 +61,7 @@
     lastTap=0;if(inGame()&&state!=='over'){pauseGame();if(paused){refreshTalk(document.getElementById('pause'),false);talkSpeak('Paused. Resume selected. Swipe to End game, or double tap to resume. Two finger tap also resumes.');}else talkSpeak('Resumed. Slide one finger left or right.');return;}
     const back=[...document.querySelectorAll('[data-view="home"]')].find(e=>e.getClientRects().length>0);if(back){activating=true;try{back.click();}finally{activating=false;}refreshTalk(document.getElementById('main-title'));}else if(inGame()&&state==='over'){refreshTalk(document.getElementById('restart'));}else talkSpeak(describeTalkItem(talkItem));
   }
-  document.addEventListener('click',e=>{if(e.target.closest('#start-talking,#resume-talking'))beginTalking();if(e.target.closest('#stop-talking'))endTalking();if(e.target.closest('#restart'))start();});
+  document.addEventListener('click',e=>{if(e.target.closest('#start-talking,#resume-talking,#return-talking'))beginTalking();if(e.target.closest('#stop-talking'))endTalking();if(e.target.closest('#restart'))start();});
   document.addEventListener('click',e=>{if(talking&&!activating&&e.isTrusted&&performance.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();}},true);
   document.addEventListener('touchstart',e=>{
     if(!talking)return;

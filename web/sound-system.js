@@ -39,7 +39,7 @@
     else if(style==='reed'){note(x<.5?2100:2500,.055,.45,'triangle');}
   }
   function puckTick(x,near,delay=0){const pitch=sound.distance!=='volume'?850+near*400:1050;const amp=sound.distance!=='pitch'?.13+near*.13:.2;
-    if(sound.puckTone==='click')tone(pitch,.022,x,'triangle',amp,'puck',delay);
+    if(sound.puckTone==='click')tone(pitch,.04,x,'triangle',amp*1.4,'puck',delay);
     if(sound.puckTone==='tock')tone(pitch*.55,.045,x,'triangle',amp,'puck',delay, .7);
     if(sound.puckTone==='shaker')for(let i=0;i<3;i++)tone(pitch*1.8+i*211,.018,x,'triangle',amp*.22,'puck',delay+i*.008);
   }
