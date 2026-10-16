@@ -23,7 +23,7 @@
     const enable=e.target.closest('#enable-game-voice,[data-voice-test]');if(enable){voiceEnabled=true;gameSpeak(enable.id==='enable-game-voice'?'Welcome to Air Hockey Audio. Your game voice is ready. Choose Start game to play with VoiceOver controls, or open Game voice and controls to choose your narrator.':'This is your selected game narrator. You two, computer one.',true);return;}
     if(e.target.closest('[data-voice-stop]')){if('speechSynthesis' in window)speechSynthesis.cancel();return;}
     const move=e.target.closest('[data-paddle]');if(move){me=move.dataset.paddle==='center'?.5:clamp(me+Number(move.dataset.paddle)/100,0,1);syncPaddle();return;}
-    const nav=e.target.closest('[data-view]');if(nav){syncVoiceControls();if(voiceEnabled&&voicePrefs.menus==='on')gameSpeak({'home':'Main menu','voice':'Game voice and controls','sound':'Sound settings','how':'How to play','install':'Install on iPhone'}[nav.dataset.view]||'',true);}
+    const nav=e.target.closest('[data-view]');if(nav){syncVoiceControls();if(voiceEnabled&&voicePrefs.menus==='on')gameSpeak({'home':'Main menu','stereo':'Headphone and direction check','voice':'Game voice and controls','sound':'Sound settings','how':'How to play','install':'Install on iPhone'}[nav.dataset.view]||'',true);}
   });
   if('speechSynthesis' in window)speechSynthesis.addEventListener('voiceschanged',syncVoiceControls);
   syncVoiceControls();
