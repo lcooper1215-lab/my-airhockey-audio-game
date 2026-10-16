@@ -21,3 +21,13 @@ GitHub holds source backups. Site publication happens separately through ChatGPT
 Enable game voice or Start game activates browser speech. Safari requires interaction; the website does not guarantee speech immediately on opening and cannot switch system VoiceOver off. Game voice and controls offers the device-provided speech voice list, speed, optional menu narration, and a saved control method. Menu narration defaults off to avoid duplicate VoiceOver announcements.
 
 VoiceOver controls are the default: an adjustable Paddle position range input and Move left, Center, Move right buttons. Direct touch is an optional mode for play with VoiceOver disabled. Browser interaction speed and actual playability still require testing on iPhone. The first serve waits for the narrator introduction to end, with error and timeout fallback. Run `node verify-voice.mjs` to check narrator selection, persistence, input controls and touch guards.
+
+## Talking interface, with iPhone VoiceOver off
+
+Activate Start talking interface once with VoiceOver, listen for the welcome, then turn iPhone VoiceOver off yourself. Safari requires user interaction to unlock speech; the page does not automatically disable VoiceOver or guarantee speech on opening.
+
+Custom menu gestures: one-finger swipe right/left selects next/previous and reads the item; double tap anywhere activates the selected button or expands a group; swipe up/down adjusts the selected slider or choice; single tap repeats the selection; two-finger tap goes back. The virtual cursor includes headings and help paragraphs as well as controls, skipping hidden/disabled items. The active item is outlined visually. Menu changes select the new screen heading.
+
+During gameplay, one finger controls the paddle directly. A two-finger tap pauses and switches to spoken game controls; another two-finger tap resumes. At game over, Play again is available. Exit talking interface restores the prior paddle control mode. Navigation speech has its own 10–100 percent volume, independent of game muting. Settings, presets and voice choices retain the same grouped menu controls.
+
+`talking-interface.js` implements the virtual cursor and gesture routing. `node verify-talking.mjs` checks navigation, adjustments, activation, double taps, gameplay touch passthrough, pause/resume and exit. Real-device gesture conflicts, speech timing and ease of use still require iPhone testing.
