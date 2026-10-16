@@ -15,3 +15,9 @@ The main menu exposes Start game, Sound settings, How to play and Install. Each 
 Automated checks cover default cues, panning, approach modes, muting, every selectable impact/serve/goal sound, idle silence, syntax, form labels and menu ids. Real iPhone VoiceOver navigation and headphone comfort still need user testing. Stereo panning is not a promise of exact physical localization. iPhone web vibration is unavailable.
 
 GitHub holds source backups. Site publication happens separately through ChatGPT Sites; GitHub pushes do not automatically deploy.
+
+## Game narrator and VoiceOver controls
+
+Enable game voice or Start game activates browser speech. Safari requires interaction; the website does not guarantee speech immediately on opening and cannot switch system VoiceOver off. Game voice and controls offers the device-provided speech voice list, speed, optional menu narration, and a saved control method. Menu narration defaults off to avoid duplicate VoiceOver announcements.
+
+VoiceOver controls are the default: an adjustable Paddle position range input and Move left, Center, Move right buttons. Direct touch is an optional mode for play with VoiceOver disabled. Browser interaction speed and actual playability still require testing on iPhone. The first serve waits for the narrator introduction to end, with error and timeout fallback. Run `node verify-voice.mjs` to check narrator selection, persistence, input controls and touch guards.
