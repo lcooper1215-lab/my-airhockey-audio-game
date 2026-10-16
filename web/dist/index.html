@@ -16,17 +16,26 @@
   #pad{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     text-align:center;font-size:20px;padding:24px;box-sizing:border-box}
 
-  body{background:#07111f} #pad{display:block;padding: max(28px,env(safe-area-inset-top)) 24px max(28px,env(safe-area-inset-bottom));overflow:auto;touch-action:pan-y}
+  select,input{font:inherit}select{display:block;background:#16283d;color:white;padding:12px;max-width:100%;margin:8px 0 16px;border:1px solid #65788e;border-radius:8px}.sound-control{margin:18px 0}.sound-control label{display:block}.sound-control input{width:100%;min-height:44px;touch-action:pan-y}body{background:#07111f} #pad{display:block;padding: max(28px,env(safe-area-inset-top)) 24px max(28px,env(safe-area-inset-bottom));overflow:auto;touch-action:pan-y}
   main{max-width:540px;margin:6vh auto;text-align:left}h1{font-size:38px;letter-spacing:-1px;margin:12px 0}p,li{line-height:1.65} .eyebrow{color:#6fe3cf;font-size:14px;letter-spacing:2px} .muted{color:#bdcbdc}button{font:inherit;border-radius:14px;border:1px solid #65788e;padding:16px 20px;min-height:52px;color:#fff;background:#16283d;margin:6px 8px 6px 0;cursor:pointer}button:focus-visible{outline:3px solid #fff;outline-offset:3px}#start{background:#6fe3cf;color:#07111f;font-weight:700;border:0;width:100%}#gamebar{position:fixed;top:env(safe-area-inset-top,0);left:0;right:0;z-index:3;background:#07111f;padding:8px;text-align:center}#gamebar[hidden]{display:none}#gamebar button{padding:10px 18px}#scoreboard{font-size:18px}body.active #pad{touch-action:none;display:flex;align-items:center;justify-content:center} .panel{border:1px solid #30445c;border-radius:18px;padding:16px;margin-top:24px}
 </style>
 </head>
 <body>
-<div id="pad"><main><div class="eyebrow">HEADPHONES ON · FIRST TO SEVEN</div><h1>Air Hockey Audio</h1><p class="muted">Follow the puck by sound. Defend your goal by touch.</p><button id="start">Start game</button><p id="status" role="status" class="muted">Ready to play.</p><section class="panel" aria-labelledby="how"><h2 id="how">How to play</h2><ol><li>Use headphones. The puck moves between your left and right ears.</li><li>Slide one finger left and right to move your paddle. A low hum marks its position.</li><li>The puck becomes higher and louder as it approaches your goal.</li><li>First to seven goals wins. Your score is spoken after each goal.</li></ol><p>With VoiceOver: activate Start game, then turn VoiceOver off for direct touch play. Turn it back on to use the menu. You can use the side-button Accessibility Shortcut if configured.</p><p>Keyboard: Left and Right arrows move your paddle. Space pauses or resumes.</p></section><section class="panel"><h2>Install on iPhone</h2><p>Open this page in Safari. Choose Share, then Add to Home Screen. Leave Open as Web App enabled if shown, then choose Add.</p><p class="muted">Browser test version · Audio and touch supported. Native vibration is unavailable on iPhone web apps.</p></section></main></div><div id="gamebar" hidden><span id="scoreboard" aria-live="polite">You 0 — Computer 0</span><br><button id="pause">Pause</button><button id="menu">End game</button></div>
+<div id="pad"><main><div class="eyebrow">HEADPHONES ON · FIRST TO SEVEN</div><h1>Air Hockey Audio</h1><p class="muted">Follow the puck by sound. Defend your goal by touch.</p><button id="start">Start game</button><p id="status" role="status" class="muted">Ready to play.</p><section class="panel" aria-labelledby="sound-title"><h2 id="sound-title">Sound studio</h2><p>A low paddle hum, a midrange puck tone, and short, high wall cues keep each role distinct. Headphones give left-right position. These are stereo cues, not exact physical distances.</p><p>Adjust each layer, then audition it. Settings save on this device. Set a layer to zero to mute it. Changes affect the next game.</p>
+<div class="sound-control"><label for="sound-master">Overall game volume: <span id="sound-master-value">65%</span></label><input id="sound-master" data-sound="master" type="range" min="0" max="100" step="5" value="65"></div><div class="sound-control"><label for="sound-puck">Puck volume: <span id="sound-puck-value">70%</span></label><input id="sound-puck" data-sound="puck" type="range" min="0" max="100" step="5" value="70"></div><div class="sound-control"><label for="sound-paddle">Paddle volume: <span id="sound-paddle-value">35%</span></label><input id="sound-paddle" data-sound="paddle" type="range" min="0" max="100" step="5" value="35"></div><div class="sound-control"><label for="sound-walls">Walls and edge warning volume: <span id="sound-walls-value">30%</span></label><input id="sound-walls" data-sound="walls" type="range" min="0" max="100" step="5" value="30"></div><div class="sound-control"><label for="sound-hits">Paddle hit and serve volume: <span id="sound-hits-value">45%</span></label><input id="sound-hits" data-sound="hits" type="range" min="0" max="100" step="5" value="45"></div><div class="sound-control"><label for="sound-goals">Goal melody volume: <span id="sound-goals-value">45%</span></label><input id="sound-goals" data-sound="goals" type="range" min="0" max="100" step="5" value="45"></div><div class="sound-control"><label for="sound-speech">Spoken score volume: <span id="sound-speech-value">90%</span></label><input id="sound-speech" data-sound="speech" type="range" min="0" max="100" step="5" value="90"></div>
+<div class="sound-control"><label for="sound-puckTone">Puck sound</label><select id="sound-puckTone" data-sound="puckTone"><option value="sine">Round tone</option><option value="triangle">Soft reed</option></select></div>
+<div class="sound-control"><label for="sound-paddleTone">Paddle sound</label><select id="sound-paddleTone" data-sound="paddleTone"><option value="triangle">Low soft reed</option><option value="sine">Low round hum</option><option value="soft">Higher round hum</option></select></div>
+<div class="sound-control"><label for="sound-paddleMode">Paddle hum pattern</label><select id="sound-paddleMode" data-sound="paddleMode"><option value="steady">Continuous</option><option value="pulse">Gently pulsing</option></select></div>
+<div class="sound-control"><label for="sound-distance">Puck approach cue</label><select id="sound-distance" data-sound="distance"><option value="both">Pitch and loudness rise</option><option value="pitch">Pitch rises, steady loudness</option><option value="volume">Loudness rises, steady pitch</option></select></div>
+<div class="sound-control"><label for="sound-wallTone">Wall sound</label><select id="sound-wallTone" data-sound="wallTone"><option value="sine">Round bell</option><option value="triangle">Soft reed</option></select></div>
+<div class="sound-control"><label for="sound-edgeRange">Paddle edge warning starts within this percent of screen width: <span id="sound-edgeRange-value">18%</span></label><input id="sound-edgeRange" data-sound="edgeRange" type="range" min="5" max="30" step="1" value="18"></div>
+<div class="sound-control"><label for="sound-hitTone">Hit sound</label><select id="sound-hitTone" data-sound="hitTone"><option value="wood">Mellow knock</option><option value="chime">Light two-note chime</option><option value="soft">Soft single note</option></select></div>
+<h3>Listen before you play</h3><label for="preview-position">Preview position</label><select id="preview-position"><option value="0">Left</option><option value="0.5" selected>Center</option><option value="1">Right</option></select><label for="preview-distance">Preview puck distance</label><select id="preview-distance"><option value="0">Far end</option><option value="0.5" selected>Middle</option><option value="1">Near your goal</option></select><div><button data-preview="puck">Listen to puck</button><button data-preview="paddle">Listen to paddle</button><button data-preview="walls">Listen to edge warning</button><button data-preview="hits">Listen to your hit</button><button data-preview="goals">Listen to goal note</button><button data-preview="speech">Listen to spoken score</button></div><button id="sound-reset">Reset sound defaults</button><p id="sound-status" role="status">Ready to adjust sounds.</p><h3>Listening for the walls</h3><p>When your paddle enters the outer 18 percent of the screen, soft pulses sound in that ear. Pulses come faster as your paddle gets closer to the edge. Adjust the warning range above. A brief high tap also marks the puck hitting a wall. The continuous puck tone still gives the puck’s own left-right position.</p></section><section class="panel" aria-labelledby="how"><h2 id="how">How the game works</h2><p>You defend the near end of the table. The computer defends the far end. Score by sending the puck past the computer’s paddle; the computer scores if the puck passes yours. First to seven goals wins.</p><h3>Sliding your paddle</h3><ol><li>Start the game, then place one finger on the play area below the score and buttons.</li><li>Your finger’s horizontal position sets your paddle’s position: left side is left, middle is center, right side is right. Touching a new spot moves the paddle there immediately.</li><li>Keep your finger on the screen and slide left or right to follow the puck’s sound. Moving up or down has no effect.</li><li>Line up your paddle with the puck before it reaches your end. The hit happens automatically. You do not tap the puck, flick it forward, or swipe upward to shoot.</li><li>Faster swipes do not make a harder shot. Hitting near the paddle’s center sends the puck more straight ahead; hitting near its edge adds sideways movement. The puck speeds up during rallies.</li><li>If you lift your finger, the paddle stays where you left it. Touching down again sets it to that new horizontal position.</li></ol><h3>Example rally</h3><p>If the puck is mostly in your left ear and its pitch is rising, it is approaching your left side. Slide left and line up the low paddle hum with the puck. A mellow knock means you returned it. As it travels away, its pitch and volume fall. Keep listening, because it may bounce off a side wall and change direction.</p><h3>What each sound means</h3><ul><li>Puck: a midrange tone panned left or right. By default, higher and louder means closer to your goal; lower and quieter means farther away. You can change this approach cue in Sound studio. Pitch tells you distance, not speed.</li><li>Your paddle: a quiet, low hum. Its left-right position follows your finger.</li><li>Your hit: a mellow knock by default. Choose a light chime or soft note in Sound studio.</li><li>Computer’s hit: a shorter, slightly higher note.</li><li>Side wall: a brief high tap on the side the puck hit. Soft repeating pulses warn when your paddle is near a side wall.</li><li>Serve: three beeps before play begins.</li><li>You score: rising notes. The computer scores: falling notes. The updated score is spoken.</li></ul><h3>Before you start</h3><p>Use stereo headphones with the left and right sides correctly placed. Sit with the phone steady. Keep your finger below the top controls. After the spoken introduction, the serve beeps begin. After each goal there is a brief pause, then another serve.</p><h3>VoiceOver and pausing</h3><p>With VoiceOver on, activate Start game. Then turn VoiceOver off for direct touch play; ordinary VoiceOver swipes navigate items instead of positioning your paddle. Turn it back on when you need the menu. You can use the side-button Accessibility Shortcut if configured. Switching away from the app pauses play. Use Resume to continue, or End game to return to this guide and reset the match.</p><p>Keyboard: Left and Right arrows move your paddle. Space pauses or resumes.</p><h3>About this web version</h3><p>Scoring rules and touch-position controls come from the GitHub game. The new sound system uses separate pitch bands, softer notes, individual volume controls and paddle edge warnings. This version adds a start menu, pause controls, browser speech and home-screen installation. The spoken voice can differ from Expo. Native iPhone vibration is unavailable. The GitHub gameplay screen is text on a black background; it does not include a drawn rink or moving puck.</p></section><section class="panel"><h2>Install on iPhone</h2><p>Open this page in Safari. Choose Share, then Add to Home Screen. Leave Open as Web App enabled if shown, then choose Add.</p><p class="muted">Browser test version · Audio and touch supported. Native vibration is unavailable on iPhone web apps.</p></section></main></div><div id="gamebar" hidden><span id="scoreboard" aria-live="polite">You 0 — Computer 0</span><br><button id="pause">Pause</button><button id="menu">End game</button></div>
 <script>
 (function(){
   const send = (type, data) => {
     if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(Object.assign({type}, data||{})));
-    else if (type === 'speak' && 'speechSynthesis' in window) { if(data.interrupt) speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(data.text); u.rate=1.05; speechSynthesis.speak(u); }
+    else if (type === 'speak' && 'speechSynthesis' in window) { if(data.interrupt) speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(data.text); u.rate=1.05; u.volume=volume('speech')*volume('master'); speechSynthesis.speak(u); }
     else if(type==='haptic' && navigator.vibrate) navigator.vibrate(data.style==='heavy'?50:15);
   };
   const say = (text, interrupt) => send('speak', {text, interrupt: !!interrupt});
@@ -52,58 +61,72 @@
   async function wake(){try{if(navigator.wakeLock&&!document.hidden)wakeLock=await navigator.wakeLock.request('screen');}catch{}}
   function pauseGame(){if(!ctx||state==='idle'||state==='over')return;paused=!paused;document.getElementById('pause').textContent=paused?'Resume':'Pause';if(paused){ctx.suspend();speechSynthesis?.cancel();wakeLock?.release();}else{ctx.resume();last=performance.now();wake();}document.getElementById('pad').textContent=paused?'Paused. Choose Resume to continue.':'Playing. Slide left and right.';}
   document.getElementById('pause').onclick=pauseGame;
-  document.getElementById('menu').onclick=()=>{clearTimers();state='idle';paused=false;if(ctx)ctx.suspend();if('speechSynthesis' in window)speechSynthesis.cancel();wakeLock?.release();document.body.classList.remove('active');document.getElementById('gamebar').hidden=true;document.getElementById('pad').innerHTML=menuHTML;document.getElementById('start').onclick=start;document.getElementById('start').focus();};
+  document.getElementById('menu').onclick=()=>{clearTimers();state='idle';paused=false;if(ctx)ctx.suspend();if('speechSynthesis' in window)speechSynthesis.cancel();wakeLock?.release();document.body.classList.remove('active');document.getElementById('gamebar').hidden=true;document.getElementById('pad').innerHTML=menuHTML;document.getElementById('start').onclick=start;syncSoundControls();document.getElementById('start').focus();};
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&!paused&&ctx&&state!=='idle'&&state!=='over')pauseGame();});
   document.addEventListener('keydown',e=>{if(state==='idle')return;if(e.code==='Space'){e.preventDefault();pauseGame();}if(e.code==='ArrowLeft'||e.code==='ArrowRight'){e.preventDefault();me=clamp(me+(e.code==='ArrowLeft'?-.05:.05),0,1);}});
 
-  // ---------- Audio ----------
-  let ctx, master, puckOsc, puckGain, puckPan, padOsc, padGain, padPan;
-
+  // Distinct pitch bands: paddle 130–190 Hz, puck 480–880 Hz,
+  // edge warnings 1250–1550 Hz, impacts short and above the puck.
+  const SOUND_DEFAULTS={master:65,puck:70,paddle:35,walls:30,hits:45,goals:45,speech:90,puckTone:'sine',paddleTone:'triangle',hitTone:'wood',wallTone:'sine',distance:'both',paddleMode:'steady',edgeRange:18};
+  let sound={...SOUND_DEFAULTS};
+  try {const saved=JSON.parse(localStorage.getItem('air-hockey-sound-v1')||'{}');for(const key of Object.keys(SOUND_DEFAULTS)){const v=saved[key];if(typeof SOUND_DEFAULTS[key]==='number'&&Number.isFinite(v))sound[key]=Math.max(0,Math.min(100,v));else if(typeof v==='string')sound[key]=v;}}catch{}
+  for(const [k,choices] of Object.entries({puckTone:['sine','triangle','soft'],paddleTone:['sine','triangle','soft'],hitTone:['wood','chime','soft'],wallTone:['sine','triangle','soft'],distance:['both','pitch','volume'],paddleMode:['steady','pulse']}))if(!choices.includes(sound[k]))sound[k]=SOUND_DEFAULTS[k];
+  let ctx,master,compressor,puckOsc,puckGain,puckPan,padOsc,padGain,padPan,edgeNext=0,duckUntil=0;
+  const volume=k=>sound[k]/100;
   function initAudio(){
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-    master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
-
-    // Puck: a continuous tone. Pan = left/right. Pitch and loudness rise as it comes toward you.
-    puckOsc = ctx.createOscillator(); puckOsc.type = 'triangle';
-    puckGain = ctx.createGain(); puckGain.gain.value = 0;
-    puckPan = ctx.createStereoPanner();
-    puckOsc.connect(puckGain).connect(puckPan).connect(master); puckOsc.start();
-
-    // Your paddle: a quiet low hum so you always know where you are.
-    padOsc = ctx.createOscillator(); padOsc.type = 'sine'; padOsc.frequency.value = 110;
-    padGain = ctx.createGain(); padGain.gain.value = 0.05;
-    padPan = ctx.createStereoPanner();
-    padOsc.connect(padGain).connect(padPan).connect(master); padOsc.start();
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    master=ctx.createGain();master.gain.value=volume('master')*.65;
+    compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-12;compressor.knee.value=12;compressor.ratio.value=4;compressor.attack.value=.005;compressor.release.value=.18;
+    master.connect(compressor).connect(ctx.destination);
+    puckOsc=ctx.createOscillator();puckGain=ctx.createGain();puckGain.gain.value=0;puckPan=ctx.createStereoPanner();puckOsc.connect(puckGain).connect(puckPan).connect(master);puckOsc.start();
+    padOsc=ctx.createOscillator();padGain=ctx.createGain();padGain.gain.value=0;padPan=ctx.createStereoPanner();padOsc.connect(padGain).connect(padPan).connect(master);padOsc.start();
   }
-
-  // Short sound effect, panned to a spot on the table.
-  function blip(freq, dur, x, type, vol){
-    const o = ctx.createOscillator(), g = ctx.createGain(), p = ctx.createStereoPanner();
-    o.type = type || 'square'; o.frequency.value = freq;
-    p.pan.value = clamp(x*2-1, -1, 1);
-    const t = ctx.currentTime;
-    g.gain.setValueAtTime(vol || 0.4, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(p).connect(master);
-    o.start(t); o.stop(t + dur + 0.02);
+  const wave=t=>t==='soft'?'sine':t;
+  function blip(freq,dur,x,type,vol,channel='hits'){
+    if(!ctx)return;
+    const o=ctx.createOscillator(),g=ctx.createGain(),p=ctx.createStereoPanner(),t=ctx.currentTime;
+    o.type=wave(type==='square'?'triangle':type||'sine');o.frequency.value=freq;
+    p.pan.value=clamp(x*2-1,-1,1);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime((vol??.22)*volume(channel),t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.03,dur));
+    o.connect(g).connect(p).connect(master);o.start(t);o.stop(t+dur+.03);o.onended=()=>{o.disconnect();g.disconnect();p.disconnect();};
   }
-  function hitSound(x){ blip(880, 0.08, x, 'square', 0.5); blip(1320, 0.05, x, 'sine', 0.3); }
-  function wallSound(x){ blip(220, 0.06, x, 'triangle', 0.5); }
-  function aiHitSound(x){ blip(440, 0.08, x, 'square', 0.35); }
-  function goalSound(mine){
-    const notes = mine ? [523,659,784,1047] : [392,330,262,196];
-    notes.forEach((f,i)=> later(()=>blip(f,0.18,0.5,'triangle',0.5), i*120));
-  }
-
+  function hitSound(x){const f=sound.hitTone==='chime'?1175:sound.hitTone==='wood'?1050:980;blip(f,.11,x,'sine',.28);if(sound.hitTone==='chime')blip(1760,.09,x,'sine',.10);}
+  function wallSound(x){blip(1450,.07,x,sound.wallTone,.19,'walls');}
+  function aiHitSound(x){blip(sound.hitTone==='chime'?1320:1150,.07,x,'sine',.15);}
+  function goalSound(mine){const notes=mine?[1047,1319,1568]:[784,659,523];notes.forEach((f,i)=>later(()=>blip(f,.16,.5,'sine',.22,'goals'),i*150));}
   function updateAudio(){
-    const t = ctx.currentTime;
-    puckPan.pan.setTargetAtTime(clamp(puck.x*2-1,-1,1), t, 0.02);
-    const near = 1 - puck.y;                       // 1 = right in front of you
-    puckOsc.frequency.setTargetAtTime(200 + near*700, t, 0.03);
-    const vol = state === 'playing' ? 0.08 + near*0.32 : 0;
-    puckGain.gain.setTargetAtTime(vol, t, 0.03);
-    padPan.pan.setTargetAtTime(clamp(me*2-1,-1,1), t, 0.02);
+    if(!ctx)return;const t=ctx.currentTime;const active=state==='playing';const tracking=active||state==='serving'||state==='wait';
+    const duck=t<duckUntil||('speechSynthesis' in window&&speechSynthesis.speaking)?.35:1;
+    master.gain.setTargetAtTime(volume('master')*.65*duck,t,.04);
+    puckOsc.type=wave(sound.puckTone);padOsc.type=wave(sound.paddleTone);
+    const near=clamp(1-puck.y,0,1),pitch=sound.distance!=='volume',loudness=sound.distance!=='pitch';
+    puckOsc.frequency.setTargetAtTime(pitch?480+near*400:660,t,.025);
+    puckPan.pan.setTargetAtTime(clamp(puck.x*2-1,-1,1),t,.012);
+    puckGain.gain.setTargetAtTime(active?volume('puck')*(loudness?.10+near*.12:.17):0,t,.025);
+    padOsc.frequency.setTargetAtTime(sound.paddleTone==='soft'?190:145,t,.025);
+    padPan.pan.setTargetAtTime(clamp(me*2-1,-1,1),t,.012);
+    const pulse=sound.paddleMode==='pulse'?.55+.45*Math.sin(t*Math.PI*4):1;
+    padGain.gain.setTargetAtTime(tracking?volume('paddle')*.16*pulse:0,t,.025);
+    // Paddle warning pulses only near an edge, avoiding a constant extra layer.
+    const range=Math.max(.05,sound.edgeRange/100),edge=Math.min(me,1-me);
+    if(active&&sound.walls>0&&edge<range&&t>=edgeNext){const closeness=1-edge/range;blip(me<.5?1250:1550,.055,me<.5?0:1,sound.wallTone,.07+.10*closeness,'walls');edgeNext=t+.7-.48*closeness;}
   }
+  function saveSound(){try{localStorage.setItem('air-hockey-sound-v1',JSON.stringify(sound));document.getElementById('sound-status').textContent='Sound settings saved on this device.';}catch{document.getElementById('sound-status').textContent='Settings applied for this session. Device storage is unavailable.';}}
+  function syncSoundControls(){document.querySelectorAll('[data-sound]').forEach(e=>{const v=sound[e.dataset.sound];e.value=v;const out=document.getElementById(e.id+'-value');if(out)out.textContent=v+'%';});}
+  document.addEventListener('input',e=>{const key=e.target.dataset?.sound;if(!Object.hasOwn(SOUND_DEFAULTS,key))return;sound[key]=typeof SOUND_DEFAULTS[key]==='number'?Number(e.target.value):e.target.value;syncSoundControls();saveSound();});
+  document.addEventListener('change',e=>{const key=e.target.dataset?.sound;if(!Object.hasOwn(SOUND_DEFAULTS,key))return;sound[key]=typeof SOUND_DEFAULTS[key]==='number'?Number(e.target.value):e.target.value;syncSoundControls();saveSound();});
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-preview],#sound-reset');if(!btn)return;
+    if(btn.id==='sound-reset'){sound={...SOUND_DEFAULTS};syncSoundControls();saveSound();return;}
+    if(!ctx)initAudio();ctx.resume();master.gain.setTargetAtTime(volume('master')*.65,ctx.currentTime,.02);
+    const x=Number(document.getElementById('preview-position').value),kind=btn.dataset.preview;
+    if(kind==='puck')blip(sound.distance==='volume'?660:480+Number(document.getElementById('preview-distance').value)*400,.8,x,sound.puckTone,(sound.distance==='pitch'?.17:.10+Number(document.getElementById('preview-distance').value)*.12),'puck');
+    if(kind==='paddle')blip(sound.paddleTone==='soft'?190:145,.8,x,sound.paddleTone,.16,'paddle');
+    if(kind==='walls')blip(x<.5?1250:1550,.12,x,sound.wallTone,.17,'walls');
+    if(kind==='hits')hitSound(x);
+    if(kind==='goals')blip(1047,.3,.5,'sine',.22,'goals');
+    if(kind==='speech')say('You two, computer one. Your spoken score sounds like this.',true);
+  });
+  syncSoundControls();
 
   // ---------- Game logic ----------
   function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
