@@ -1,4 +1,5 @@
 export const LIBRARY={
+ goalWarningTone:[['rise','Short rising goal-border chirp'],['bell','Short goal-border bell']],
  airTone:[['fan','Table blower: airflow and low motor hum'],['soft','Softer filtered airflow']],
  puckTone:[['click','Dry rhythmic clicks'],['tock','Hollow ticking'],['shaker','Soft shaker ticks'],['sine','Smooth round tone'],['triangle','Soft reed tone'],['warble','Gentle wavering tone']],
  paddleTone:[['guide','Clear moving paddle hum: position and motion'],['sine','Low steady hum'],['triangle','Low reed'],['soft','Higher round hum'],['hollow','Hollow organ hum']],
@@ -20,6 +21,7 @@ ${group('paddle','Your paddle','paddleTone',55,'A clear low reed hum follows you
 ${group('walls','Puck hitting a wall','wallTone',65,'Each wall makes one louder metallic clink: left wall in your left ear, right wall in your right ear.')}
 ${group('hits','Your paddle hitting the puck','hitTone',50,'One sharp recorded strike by default, heard where your paddle returns the puck.')}
 ${group('ai','Computer hitting the puck','aiTone',45,'Two low knocks by default. Your own hit is a single, sharper recorded strike.')}
+${group('goalWarning','Puck at your goal border','goalWarningTone',55,'This brief cue sounds only as an incoming puck crosses the front edge of your goal, at the paddle line. It follows the puck left to right. It does not sound early, while placing a serve, or when the puck is moving away.')}
 ${group('edges','Paddle near a wall','edgeTone',30,'Soft high chirps warn when YOUR PADDLE nears a side wall. They repeat faster as your paddle approaches the edge.',slider('edgeRange','Edge warning range',18,5,30,1))}
 ${group('serve','Serve countdown','serveTone',45,'Optional notes behind the spoken three, two, one countdown. The puck then waits for you to place and strike it. Set this volume to zero for spoken countdown only.')}
 ${group('goals','Goal celebration','goalTone',45,'Rising notes mean you scored. Falling notes mean the computer scored. Test either melody below.','', '<button data-preview="loss">Test computer goal melody</button>')}

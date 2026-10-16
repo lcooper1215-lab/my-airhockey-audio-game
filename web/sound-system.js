@@ -1,4 +1,4 @@
-  const SOUND_DEFAULTS={stereo:'focused',direction:'pattern',air:8,airTone:'fan',master:65,puck:85,paddle:55,walls:65,hits:50,ai:45,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'guide',wallTone:'rail',hitTone:'recorded',aiTone:'knockpair',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
+  const SOUND_DEFAULTS={goalWarning:55,goalWarningTone:'rise',stereo:'focused',direction:'pattern',air:8,airTone:'fan',master:65,puck:85,paddle:55,walls:65,hits:50,ai:45,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'guide',wallTone:'rail',hitTone:'recorded',aiTone:'knockpair',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
   const SOUND_CHOICES=__SOUND_CHOICES__;
   let sound={...SOUND_DEFAULTS};let realismUpgraded=false;
   try{const saved=JSON.parse(localStorage.getItem('air-hockey-sound-v2')||'{}');for(const key of Object.keys(SOUND_DEFAULTS)){const v=saved[key];if(typeof SOUND_DEFAULTS[key]==='number'&&Number.isFinite(v))sound[key]=Math.max(key==='edgeRange'?5:0,Math.min(key==='edgeRange'?30:100,v));else if(typeof v==='string')sound[key]=v;}}catch{}
@@ -63,7 +63,7 @@
   function updateAudio(){
     if(!ctx)return;const t=ctx.currentTime,active=state==='playing'||state==='ready',tracking=active||state==='serving'||state==='countdown'||state==='wait';const duck=('speechSynthesis' in window&&speechSynthesis.speaking)?.35:1;
     master.gain.setTargetAtTime(volume('master')*.65*duck,t,.035);
-    updateAir(tracking?1-.7*clamp(1-puck.y,0,1):0);
+    updateGoalBorderPan();updateAir(tracking?1-.7*clamp(1-puck.y,0,1):0);
     const near=clamp(1-puck.y,0,1),continuous=['sine','triangle','warble'].includes(sound.puckTone);
     puckOsc.type=wave(sound.puckTone);puckOsc.frequency.setTargetAtTime((sound.distance==='volume'?660:480+near*400)+(sound.puckTone==='warble'?Math.sin(t*9)*28:0),t,.018);puckPan.pan.setTargetAtTime(spatialPan(puck.x),t,.01);
     puckGain.gain.setTargetAtTime(active&&continuous?volume('puck')*(sound.distance==='pitch'?.17:.10+near*.12):0,t,.015);
@@ -88,7 +88,7 @@
     const kind=btn.dataset.preview,pos=document.getElementById('preview-'+kind),x=pos?Number(pos.value):.5,near=Number(document.getElementById('preview-distance').value);
     if(kind==='puck'){if(['click','tock','shaker'].includes(sound.puckTone)){for(let t=0;t<1;t+=(sound.direction==='pattern'?.21-near*.07:.18-near*.085))puckTick(x,near,t,document.getElementById('preview-travel')?.value!=='away');}else tone(sound.distance==='volume'?660:480+near*400,1,x,sound.puckTone,sound.distance==='pitch'?.17:.10+near*.12,'puck');}
     if(kind==='paddle'){if(sound.paddleMode==='pulse'){for(let i=0;i<4;i++)tone(paddleFrequency(x),.18,x,sound.paddleTone,.24,'paddle',i*.25);}else tone(paddleFrequency(x),1,x,sound.paddleTone,.24,'paddle');}
-    if(kind==='paddle-sweep')previewPaddleSweep();if(kind==='channel-left'||kind==='channel-right')tone(700,.6,kind==='channel-left'?0:1,'sine',.26,'stereoCheck');if(kind==='wall-left'||kind==='wall-right')wallSound(kind==='wall-left'?0:1);if(kind==='air')previewAir();if(kind==='walls')wallSound(x);if(kind==='hits')hitSound(x);if(kind==='ai')aiHitSound(x);if(kind==='edges')for(let i=0;i<3;i++)texture(sound.edgeTone,x,'edges',i*.3,.17);
+    if(kind==='goalWarning')goalBorderSound(x,false);if(kind==='paddle-sweep')previewPaddleSweep();if(kind==='channel-left'||kind==='channel-right')tone(700,.6,kind==='channel-left'?0:1,'sine',.26,'stereoCheck');if(kind==='wall-left'||kind==='wall-right')wallSound(kind==='wall-left'?0:1);if(kind==='air')previewAir();if(kind==='walls')wallSound(x);if(kind==='hits')hitSound(x);if(kind==='ai')aiHitSound(x);if(kind==='edges')for(let i=0;i<3;i++)texture(sound.edgeTone,x,'edges',i*.3,.17);
     if(kind==='goals'||kind==='loss')goalSound(kind==='goals');if(kind==='serve')for(let i=0;i<3;i++)serveSound(i,i*.5,x);
     if(kind==='speech')say('You two, computer one. This is your spoken score.',true);previewing=false;status('Testing '+(kind==='loss'?'computer goal':kind)+'.');
   });
