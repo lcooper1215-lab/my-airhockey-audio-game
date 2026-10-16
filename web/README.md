@@ -31,3 +31,7 @@ Custom menu gestures: one-finger swipe right/left selects next/previous and read
 During gameplay, one finger controls the paddle directly. A two-finger tap pauses and switches to spoken game controls; another two-finger tap resumes. At game over, Play again is available. Exit talking interface restores the prior paddle control mode. Navigation speech has its own 10–100 percent volume, independent of game muting. Settings, presets and voice choices retain the same grouped menu controls.
 
 `talking-interface.js` implements the virtual cursor and gesture routing. `node verify-talking.mjs` checks navigation, adjustments, activation, double taps, gameplay touch passthrough, pause/resume and exit. Real-device gesture conflicts, speech timing and ease of use still require iPhone testing.
+
+## Automatic internal screen reader
+
+The talking interface now initializes on every page opening without an enable button. The first swipe or tap announces Start game using the saved narrator, naturally satisfying Safari's user-interaction requirement. It cannot guarantee speech before any interaction or disable the system screen reader. The initial gesture does not skip Start game; subsequent swipes navigate normally. Exit affects only the current session; opening the app again starts internal routing automatically. Trusted native control activations remain available; compatibility clicks following intercepted touch gestures are suppressed to avoid activating the wrong item.
