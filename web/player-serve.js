@@ -1,6 +1,6 @@
   let serveTouch=null;
   function serve(){
-    puck={x:me,y:.10,vx:0,vy:0};ai=.5;aiTarget=.5;aiThinkIn=.22;state='countdown';serveTouch=null;
+    puck={x:me,y:.10,vx:0,vy:0};ai=.5;aiTarget=.5;aiThinkIn=0;rallySeconds=0;state='countdown';serveTouch=null;
     document.getElementById('serve-controls').hidden=true;
     document.getElementById('pad').textContent='3… 2… 1…';
     say('Three.',true);serveSound(0);

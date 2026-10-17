@@ -97,3 +97,8 @@ During play, two-finger **double tap** pauses and opens Resume / End game. A sin
 
 ## Puck depth mapping (version 17)
 The default puck cue keeps its pitch and click rhythm steady. Actual horizontal puck position drives stereo pan, including after wall reflections; there is no independent left/right sweep. Loudness now rises smoothly from the opponent goal to the human goal over a roughly 17 dB range. Existing saved devices receive this volume-only mapping once, retaining their selected sound and volume. Tests cover monotonic depth level, stable pan at fixed x and consistent tick cadence.
+
+## Difficulty (version 18)
+One collapsed Difficulty menu beside Start game offers Too easy, Not so bad and I'm not ready. It uses the existing spoken choice gestures and saves on the device. The default retains the prior opponent. Middle difficulty has faster defense and a shorter reaction delay; highest difficulty also predicts side-wall rebounds and has a slightly wider paddle. Player paddle size, human-first serves, scoring and audio mappings remain consistent.
+
+On highest difficulty only, the puck starts at 0.38 table lengths/second and gains 0.006 per active rally second, capped at 1.05. Collisions preserve the timed speed rather than suddenly multiplying it. Each new rally resets the timer; countdowns, goals and pauses do not advance it. Other levels retain collision-based speed increases. Automated checks cover persistence, menu restoration, invalid saved settings, stronger defense in shot simulations, time-based acceleration, frame independence, speed cap and serve reset. Physical iPhone listening/touch QA remains user testing.
