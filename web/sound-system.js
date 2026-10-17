@@ -1,4 +1,4 @@
-  const SOUND_DEFAULTS={goalWarning:55,goalWarningTone:'rise',stereo:'focused',direction:'pattern',air:12,airTone:'fan',master:65,puck:85,paddle:35,walls:65,hits:50,ai:45,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'glide',wallTone:'rail',hitTone:'recorded',aiTone:'knockpair',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
+  const SOUND_DEFAULTS={goalWarning:55,goalWarningTone:'rise',stereo:'focused',direction:'pattern',air:12,airTone:'fan',master:65,puck:85,paddle:35,walls:65,hits:65,ai:50,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'glide',wallTone:'rail',hitTone:'solid',aiTone:'return',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
   const SOUND_CHOICES=__SOUND_CHOICES__;
   let sound={...SOUND_DEFAULTS};let realismUpgraded=false;
   try{const saved=JSON.parse(localStorage.getItem('air-hockey-sound-v2')||'{}');for(const key of Object.keys(SOUND_DEFAULTS)){const v=saved[key];if(typeof SOUND_DEFAULTS[key]==='number'&&Number.isFinite(v))sound[key]=Math.max(key==='edgeRange'?5:0,Math.min(key==='edgeRange'?30:100,v));else if(typeof v==='string')sound[key]=v;}}catch{}
@@ -7,10 +7,13 @@
   try{if(!localStorage.getItem('air-hockey-paddle-v1')){sound.paddle=Math.max(55,sound.paddle);sound.walls=Math.max(65,sound.walls);if(sound.paddleTone==='sine')sound.paddleTone='guide';localStorage.setItem('air-hockey-paddle-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   try{if(!localStorage.getItem('air-hockey-playability-v1')){if(sound.paddle===55)sound.paddle=35;localStorage.setItem('air-hockey-playability-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   try{if(!localStorage.getItem('air-hockey-glide-v1')){if(sound.air===8)sound.air=12;if(sound.paddleTone==='guide')sound.paddleTone='glide';localStorage.setItem('air-hockey-glide-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
+  try{if(!localStorage.getItem('air-hockey-contact-v1')){if(sound.hitTone==='recorded')sound.hitTone='solid';if(sound.aiTone==='knockpair')sound.aiTone='return';if(sound.hits===50)sound.hits=65;localStorage.setItem('air-hockey-contact-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   for(const [k,choices] of Object.entries(SOUND_CHOICES))if(!choices.includes(sound[k]))sound[k]=SOUND_DEFAULTS[k];
   let ctx,master,compressor,puckOsc,puckGain,puckPan,padOsc,padGain,padPan,edgeNext=0,puckNext=0,previewing=false;
   let previewNodes=new Set();let paddleMotionUntil=0,lastPaddlePosition=.5;
-  const volume=k=>k==='stereoCheck'?.7:sound[k]/100;
+  let contactUntil=0;
+  const volume=k=>k==='stereoCheck'?.7:sound[k]/100*((ctx&&ctx.currentTime<contactUntil&&['air','paddle','puck'].includes(k))?.22:1);
+  function focusContact(){if(ctx&&!previewing){contactUntil=ctx.currentTime+.16;puckNext=Math.max(puckNext,contactUntil);for(const gain of [puckGain,padGain]){gain.gain.cancelScheduledValues?.(ctx.currentTime);gain.gain.setTargetAtTime(0,ctx.currentTime,.005);}if(typeof updateAir==='function')updateAir(0);if(typeof updatePaddleGlide==='function')updatePaddleGlide(false,me);}}
   function spatialPan(x){const raw=clamp(x*2-1,-1,1);return sound.stereo==='natural'?raw:clamp(Math.sign(raw)*Math.sqrt(Math.abs(raw))*1.15,-1,1);}
   if(realismUpgraded){try{localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));localStorage.setItem('air-hockey-realism-v1','1');}catch{}}
   const wave=t=>['triangle','hollow','guide'].includes(t)?'triangle':'sine';
@@ -32,7 +35,8 @@
   function blip(freq,dur,x,type,amp){tone(freq,dur,x,type,amp??.22,'serve');}
   function texture(style,x,channel,delay=0,amp=.28){
     const note=(f,d,a=1,type='sine',offset=0,bend=1)=>tone(f,d,x,type,amp*a,channel,delay+offset,bend);
-    if(style==='knockpair'){note(230,.075,.8,'triangle',0,.6);note(170,.08,.7,'triangle',.10,.6);}
+    if(style==='solid'||style==='return'){const own=style==='solid';if(!recordedHit(own?0:2,x,channel,delay,own?1.08:.76,own?.72:.62))note(own?650:300,.075,1,'triangle');if(!own)note(185,.07,.55,'triangle',.065,.7);}
+    else if(style==='knockpair'){note(230,.075,.8,'triangle',0,.6);note(170,.08,.7,'triangle',.10,.6);}
     else if(style==='recorded'||style==='recordedlow'){if(!recordedHit(style==='recorded'?0:2,x,channel,delay,style==='recordedlow'?.82:1,.5)){note(style==='recorded'?400:280,.08,.9,'triangle');note(1300,.03,.2);}}
     else if(style==='rail'){recordedHit(1,x,channel,delay,1.08,.42);[1370,2243,3187].forEach((f,i)=>note(f,.18-i*.035,.42/(i+1),'sine'));}
     else if(style==='metal'){[730,1217,1913,2861].forEach((f,i)=>note(f,.26-i*.035,1/(i+2)));}
@@ -54,8 +58,8 @@
     if(sound.puckTone==='shaker')for(let i=0;i<3;i++)tone(pitch*1.8+i*211,.018,x,'triangle',amp*.22,'puck',delay+i*.008);
     if(sound.direction==='pattern'&&toward)tone(pitch*.98,.018,x,'triangle',amp*.6,'puck',delay+.048);
   }
-  function hitSound(x){if(typeof showPlayEvent==='function')showPlayEvent('YOUR HIT');texture(sound.hitTone,x,'hits');}
-  function aiHitSound(x){if(typeof showPlayEvent==='function')showPlayEvent('COMPUTER HIT');texture(sound.aiTone,x,'ai',0,.24);}
+  function hitSound(x){focusContact();if(typeof showPlayEvent==='function')showPlayEvent('YOUR HIT');texture(sound.hitTone,x,'hits');}
+  function aiHitSound(x){focusContact();if(typeof showPlayEvent==='function')showPlayEvent('COMPUTER HIT');texture(sound.aiTone,x,'ai',0,.24);}
   function wallSound(x){if(typeof showPlayEvent==='function')showPlayEvent(x<.5?'LEFT WALL':'RIGHT WALL');texture(sound.wallTone,x<.5?0:1,'walls',0,.36);}
   function edgeSound(x){texture(sound.edgeTone,x,'edges',0,.17);}
   function paddleFrequency(x){if(sound.paddleTone==='glide')return 210+clamp(x,0,1)*70;return sound.paddleTone==='guide'?190+clamp(x,0,1)*120:sound.paddleTone==='soft'?190:sound.paddleTone==='hollow'?110:145;}
@@ -87,7 +91,7 @@
     const btn=e.target.closest('[data-preview],#sound-reset,#stop-preview,[data-stop-preview]');if(!btn)return;stopPreview();if(btn.id==='stop-preview'||btn.hasAttribute('data-stop-preview')){status('Sound test stopped.');return;}
     if(btn.id==='sound-reset'){sound={...SOUND_DEFAULTS};syncSoundControls();saveSound();status('Distinct default sounds restored.');return;}
     if(!ctx)initAudio();ctx.resume();master.gain.setTargetAtTime(volume('master')*.65,ctx.currentTime,.02);previewing=true;
-    const kind=btn.dataset.preview,pos=document.getElementById('preview-'+kind),x=pos?Number(pos.value):.5,near=Number(document.getElementById('preview-distance').value);
+    const kind=btn.dataset.preview,pos=document.getElementById('preview-'+kind),x=pos?Number(pos.value):.5,near=Number((document.getElementById('preview-distance')?.value??.65));
     if(kind==='puck'){if(['click','tock','shaker'].includes(sound.puckTone)){for(let t=0;t<1;t+=(sound.direction==='pattern'?.21-near*.07:.18-near*.085))puckTick(x,near,t,document.getElementById('preview-travel')?.value!=='away');}else tone(sound.distance==='volume'?660:480+near*400,1,x,sound.puckTone,sound.distance==='pitch'?.17:.10+near*.12,'puck');}
     if(kind==='paddle'&&sound.paddleTone==='glide')previewPaddleGlide(x,false);if(kind==='paddle'&&sound.paddleTone!=='glide'){if(sound.paddleMode==='pulse'){for(let i=0;i<4;i++)tone(paddleFrequency(x),.18,x,sound.paddleTone,.20,'paddle',i*.25);}else tone(paddleFrequency(x),1,x,sound.paddleTone,.20,'paddle');}
     if(kind==='goalWarning')goalBorderSound(x,false);if(kind==='paddle-sweep')previewPaddleSweep();if(kind==='channel-left'||kind==='channel-right')tone(700,.6,kind==='channel-left'?0:1,'sine',.26,'stereoCheck');if(kind==='wall-left'||kind==='wall-right')wallSound(kind==='wall-left'?0:1);if(kind==='air')previewAir();if(kind==='walls')wallSound(x);if(kind==='hits')hitSound(x);if(kind==='ai')aiHitSound(x);if(kind==='edges')for(let i=0;i<3;i++)texture(sound.edgeTone,x,'edges',i*.3,.17);
