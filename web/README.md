@@ -93,3 +93,7 @@ Visual display settings add dark/light contrast, 32/42 pixel puck appearance, a 
 Sound settings now have seven collapsed groups, with a choice, adjacent test and volume. The internal narrator cycles a choice on double tap; up/down still adjusts it. Your real-table clack is sharper and the opponent has a lower return signature. Background audio briefly ducks at actual paddle contact. Movement Foley is softened and low-pass filtered; it is not an isolated mallet recording. The computer aims varied returns with unchanged defensive speed/reaction delay.
 
 During play, two-finger **double tap** pauses and opens Resume / End game. A single two-finger tap, long multitouch and movement do not open it. Live controls ignore pointer clicks; End game is guarded until paused or game over. iOS system Home/edge gestures cannot be disabled by web content.
+
+
+## Puck depth mapping (version 17)
+The default puck cue keeps its pitch and click rhythm steady. Actual horizontal puck position drives stereo pan, including after wall reflections; there is no independent left/right sweep. Loudness now rises smoothly from the opponent goal to the human goal over a roughly 17 dB range. Existing saved devices receive this volume-only mapping once, retaining their selected sound and volume. Tests cover monotonic depth level, stable pan at fixed x and consistent tick cadence.

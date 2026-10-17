@@ -1,4 +1,4 @@
-  const SOUND_DEFAULTS={goalWarning:55,goalWarningTone:'rise',stereo:'focused',direction:'pattern',air:12,airTone:'fan',master:65,puck:85,paddle:35,walls:65,hits:65,ai:50,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'glide',wallTone:'rail',hitTone:'solid',aiTone:'return',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'both',paddleMode:'steady',edgeRange:18};
+  const SOUND_DEFAULTS={goalWarning:55,goalWarningTone:'rise',stereo:'focused',direction:'off',air:12,airTone:'fan',master:65,puck:85,paddle:35,walls:65,hits:65,ai:50,edges:30,serve:45,goals:45,speech:90,puckTone:'click',paddleTone:'glide',wallTone:'rail',hitTone:'solid',aiTone:'return',edgeTone:'chirp',serveTone:'beeps',goalTone:'harp',distance:'volume',paddleMode:'steady',edgeRange:18};
   const SOUND_CHOICES=__SOUND_CHOICES__;
   let sound={...SOUND_DEFAULTS};let realismUpgraded=false;
   try{const saved=JSON.parse(localStorage.getItem('air-hockey-sound-v2')||'{}');for(const key of Object.keys(SOUND_DEFAULTS)){const v=saved[key];if(typeof SOUND_DEFAULTS[key]==='number'&&Number.isFinite(v))sound[key]=Math.max(key==='edgeRange'?5:0,Math.min(key==='edgeRange'?30:100,v));else if(typeof v==='string')sound[key]=v;}}catch{}
@@ -8,6 +8,8 @@
   try{if(!localStorage.getItem('air-hockey-playability-v1')){if(sound.paddle===55)sound.paddle=35;localStorage.setItem('air-hockey-playability-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   try{if(!localStorage.getItem('air-hockey-glide-v1')){if(sound.air===8)sound.air=12;if(sound.paddleTone==='guide')sound.paddleTone='glide';localStorage.setItem('air-hockey-glide-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   try{if(!localStorage.getItem('air-hockey-contact-v1')){if(sound.hitTone==='recorded')sound.hitTone='solid';if(sound.aiTone==='knockpair')sound.aiTone='return';if(sound.hits===50)sound.hits=65;localStorage.setItem('air-hockey-contact-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
+  // Depth is conveyed by level, independently of lateral position. Upgrade existing devices once.
+  try{if(!localStorage.getItem('air-hockey-depth-v1')){sound.distance='volume';sound.direction='off';localStorage.setItem('air-hockey-depth-v1','1');localStorage.setItem('air-hockey-sound-v2',JSON.stringify(sound));}}catch{}
   for(const [k,choices] of Object.entries(SOUND_CHOICES))if(!choices.includes(sound[k]))sound[k]=SOUND_DEFAULTS[k];
   let ctx,master,compressor,puckOsc,puckGain,puckPan,padOsc,padGain,padPan,edgeNext=0,puckNext=0,previewing=false;
   let previewNodes=new Set();let paddleMotionUntil=0,lastPaddlePosition=.5;
@@ -52,7 +54,9 @@
     else if(style==='whisper'||style==='brush'){for(let i=0;i<5;i++)note(1700+i*283,.045,.07,'triangle',i*.006);}
     else if(style==='reed'){note(x<.5?2100:2500,.055,.45,'triangle');}
   }
-  function puckTick(x,near,delay=0,toward=puck.vy<0){const pitch=sound.distance!=='volume'?850+near*400:1050;const amp=sound.distance!=='pitch'?.13+near*.13:.2;
+  function puckLoudness(near){return .045+.275*Math.pow(clamp(near,0,1),1.5);}
+  function puckInterval(near){return sound.direction==='pattern'?.21-near*.07:.16;}
+  function puckTick(x,near,delay=0,toward=puck.vy<0){const pitch=sound.distance!=='volume'?850+near*400:1050;const amp=sound.distance!=='pitch'?puckLoudness(near):.2;
     if(sound.puckTone==='click')tone(pitch*(sound.direction==='pattern'&&!toward?.8:1),.04,x,'triangle',amp*1.4,'puck',delay);
     if(sound.puckTone==='tock')tone(pitch*.55,.045,x,'triangle',amp,'puck',delay, .7);
     if(sound.puckTone==='shaker')for(let i=0;i<3;i++)tone(pitch*1.8+i*211,.018,x,'triangle',amp*.22,'puck',delay+i*.008);
@@ -72,8 +76,8 @@
     updateGoalBorderPan();updateAir(tracking?1-.7*clamp(1-puck.y,0,1):0);
     const near=clamp(1-puck.y,0,1),continuous=['sine','triangle','warble'].includes(sound.puckTone);
     puckOsc.type=wave(sound.puckTone);puckOsc.frequency.setTargetAtTime((sound.distance==='volume'?660:480+near*400)+(sound.puckTone==='warble'?Math.sin(t*9)*28:0),t,.018);puckPan.pan.setTargetAtTime(spatialPan(puck.x),t,.01);
-    puckGain.gain.setTargetAtTime(active&&continuous?volume('puck')*(sound.distance==='pitch'?.17:.10+near*.12):0,t,.015);
-    if(active&&!continuous&&t>=puckNext){puckTick(puck.x,near);puckNext=t+(sound.direction==='pattern'?.21-near*.07:.18-near*.085);}
+    puckGain.gain.setTargetAtTime(active&&continuous?volume('puck')*(sound.distance==='pitch'?.17:puckLoudness(near)):0,t,.015);
+    if(active&&!continuous&&t>=puckNext){puckTick(puck.x,near);puckNext=t+puckInterval(near);}
     padOsc.type=wave(sound.paddleTone);padOsc.frequency.setTargetAtTime(paddleFrequency(me),t,.02);padPan.pan.setTargetAtTime(spatialPan(me),t,.01);
     if(Math.abs(me-lastPaddlePosition)>.002)paddleMotionUntil=t+.25;lastPaddlePosition=me;
     const moving=t<paddleMotionUntil;updatePaddleGlide(tracking&&moving&&sound.paddleTone==='glide',me);const pulse=sound.paddleMode==='pulse'?.55+.45*Math.sin(t*Math.PI*4):1;padGain.gain.setTargetAtTime(tracking?volume('paddle')*(sound.paddleTone==='glide'?.035:moving?.20:.10)*pulse:0,t,.025);
@@ -92,7 +96,7 @@
     if(btn.id==='sound-reset'){sound={...SOUND_DEFAULTS};syncSoundControls();saveSound();status('Distinct default sounds restored.');return;}
     if(!ctx)initAudio();ctx.resume();master.gain.setTargetAtTime(volume('master')*.65,ctx.currentTime,.02);previewing=true;
     const kind=btn.dataset.preview,pos=document.getElementById('preview-'+kind),x=pos?Number(pos.value):.5,near=Number((document.getElementById('preview-distance')?.value??.65));
-    if(kind==='puck'){if(['click','tock','shaker'].includes(sound.puckTone)){for(let t=0;t<1;t+=(sound.direction==='pattern'?.21-near*.07:.18-near*.085))puckTick(x,near,t,document.getElementById('preview-travel')?.value!=='away');}else tone(sound.distance==='volume'?660:480+near*400,1,x,sound.puckTone,sound.distance==='pitch'?.17:.10+near*.12,'puck');}
+    if(kind==='puck'){if(['click','tock','shaker'].includes(sound.puckTone)){for(let t=0;t<1;t+=puckInterval(near))puckTick(x,near,t,document.getElementById('preview-travel')?.value!=='away');}else tone(sound.distance==='volume'?660:480+near*400,1,x,sound.puckTone,sound.distance==='pitch'?.17:puckLoudness(near),'puck');}
     if(kind==='paddle'&&sound.paddleTone==='glide')previewPaddleGlide(x,false);if(kind==='paddle'&&sound.paddleTone!=='glide'){if(sound.paddleMode==='pulse'){for(let i=0;i<4;i++)tone(paddleFrequency(x),.18,x,sound.paddleTone,.20,'paddle',i*.25);}else tone(paddleFrequency(x),1,x,sound.paddleTone,.20,'paddle');}
     if(kind==='goalWarning')goalBorderSound(x,false);if(kind==='paddle-sweep')previewPaddleSweep();if(kind==='channel-left'||kind==='channel-right')tone(700,.6,kind==='channel-left'?0:1,'sine',.26,'stereoCheck');if(kind==='wall-left'||kind==='wall-right')wallSound(kind==='wall-left'?0:1);if(kind==='air')previewAir();if(kind==='walls')wallSound(x);if(kind==='hits')hitSound(x);if(kind==='ai')aiHitSound(x);if(kind==='edges')for(let i=0;i<3;i++)texture(sound.edgeTone,x,'edges',i*.3,.17);
     if(kind==='goals'||kind==='loss')goalSound(kind==='goals');if(kind==='serve')for(let i=0;i<3;i++)serveSound(i,i*.5,x);

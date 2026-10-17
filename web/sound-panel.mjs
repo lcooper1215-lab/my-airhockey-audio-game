@@ -15,7 +15,7 @@ const slider=(k,label,value)=>`<label for="sound-${k}">${label}</label><input id
 const group=(key,title,tone,volume,description)=>`<details class="sound-group"><summary>${title}</summary><div class="sound-group-body"><p>${description}</p>${choice(tone,title+' sound',LIBRARY[tone])}<button data-preview="${key}">Test ${title.toLowerCase()} sound</button>${slider(key,title+' volume',volume)}</div></details>`;
 export const soundPanel=`<section id="sound-screen" class="panel app-screen" hidden aria-labelledby="sound-title"><h2 id="sound-title" tabindex="-1">Sound settings</h2><button data-view="home">Back to main menu</button><p>Open a group. Choose a sound, test it, then adjust volume. Swipe up or down on a choice to change it; double tap also selects the next sound. Changes save automatically.</p>
 <details class="sound-group"><summary>Overall volume</summary><div class="sound-group-body">${slider('master','Overall volume',65)}</div></details>
-${group('puck','Puck','puckTone',85,'Follow the clicks left and right. Closer clicks repeat faster; incoming clicks are doubled.')}
+${group('puck','Puck','puckTone',85,'Left and right follow the puck’s actual position and wall bounces. Volume rises smoothly on your half and falls toward the opponent. The default clicks keep the same pitch and rhythm.')}
 ${group('paddle','Your paddle movement','paddleTone',35,'A quiet surface glide follows your moving paddle. This is softened plastic Foley; impacts use a real table recording.')}
 ${group('hits','Your hit','hitTone',65,'A crisp clack confirms actual contact. The background briefly softens so the hit stands out.')}
 ${group('ai','Opponent hit','aiTone',50,'A lower clack with a short knock identifies the opponent’s return at the far end.')}
